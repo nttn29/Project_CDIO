@@ -8,8 +8,8 @@
             <div class="page-content">
                 <router-view></router-view>
             </div>
+            <BotAdmin></BotAdmin>
         </div>
-        <BotAdmin></BotAdmin>
     </div>
 </template>
 <script>
@@ -37,4 +37,9 @@ export default {
 @import "../../assets/css/semi-dark.css";
 @import "../../assets/css/header-colors.css";
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css");
+
+/* Ensure main page content sits below the fixed header (70px) */
+.page-wrapper {
+    padding-top: 80px;
+}
 </style>

@@ -1,6 +1,7 @@
 <template>
     <footer class="maintenance-footer">
-        <div class="footer-content">
+        <div class="footer-inner">
+            <div class="footer-content">
             <div class="footer-section about">
                 <h3 class="logo-text">CondoMaint<span class="highlight">System</span></h3>
                 <p>
@@ -50,8 +51,9 @@
             </div>
         </div>
 
-        <div class="footer-bottom">
-            <p>&copy; {{ currentYear }} Ban Quản Lý Chung cư. All rights reserved.</p>
+            <div class="footer-bottom">
+                <p>&copy; {{ currentYear }} Ban Quản Lý Chung cư. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 </template>
@@ -70,8 +72,11 @@ export default {
 <style scoped>
 /* Reset cơ bản cho footer */
 .maintenance-footer {
+    background: transparent;
+}
+
+.footer-inner {
     background-color: #1a252f;
-    /* Màu xanh đen chuyên nghiệp */
     color: #ecf0f1;
     padding-top: 40px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

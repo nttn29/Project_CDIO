@@ -138,9 +138,11 @@ export default {
     backdrop-filter: blur(10px);
     /* Hiệu ứng kính mờ */
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 1000;
+    left: 0;
+    right: 0;
+    z-index: 900;
     height: 70px;
     font-family: 'Inter', 'Segoe UI', sans-serif;
     transition: all 0.3s ease;
@@ -153,7 +155,7 @@ export default {
 }
 
 .header-container {
-    max-width: 1280px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px;
     height: 100%;
