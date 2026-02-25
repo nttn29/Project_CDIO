@@ -31,18 +31,15 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRequestStore } from '@/stores/requestStore'
-import { useUserStore } from '@/stores/userStore'
-
-const requestStore = useRequestStore()
-const userStore = useUserStore()
+import api from '@/services/api'
+import { user } from '@/services/api'
 
 const loading = ref(false)
 const error = ref('')
+const requests = ref([])
 
-const userId = computed(() => userStore.user?.id_nguoi_dung || null)
-const userName = computed(() => userStore.user?.ten || userStore.user?.name || '')
-const requests = computed(() => requestStore.requests || [])
+const userId = computed(() => user.value?.id_nguoi_dung || null)
+const userName = computed(() => user.value?.ten || user.value?.name || '')
 
 const total = computed(() => requests.value.length)
 const processing = computed(() => requests.value.filter((r) => r.trang_thai === 'dang_xu_ly').length)
@@ -54,7 +51,8 @@ onMounted(async () => {
   loading.value = true
   error.value = ''
   try {
-    await requestStore.getMyRequests(userId.value)
+    const response = await api.get('/yeu_cau', { params: { id_cu_dan: userId.value } })
+    requests.value = response.data || []
   } catch (err) {
     error.value = err?.error || err?.message || 'Không tải được dữ liệu'
   } finally {

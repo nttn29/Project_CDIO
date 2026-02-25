@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
-class ResidentSeeder extends Seeder
+class ClientSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -148,7 +148,6 @@ class ResidentSeeder extends Seeder
             DB::table('yeu_cau_bao_tri')->insert($request);
         }
 
-        // Create sample feedback for completed requests
         $feedback = [
             [
                 'id_yeu_cau' => 1,

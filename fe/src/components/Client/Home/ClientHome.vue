@@ -62,6 +62,9 @@ const dashboard = reactive({
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
   gap: 16px;
+  /* keep stats centered on wide viewports */
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .card {

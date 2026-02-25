@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "../components/Client/Home.vue";
+import ClientHome from "../components/Client/Home/ClientHome.vue";
 import AdminHome from "../components/Admin/TrangChu.vue";
 import AdminSoDoNha from "../components/Admin/BANQUANLY/QuanLyCuDan/SoDoNha/index.vue";
 import AdminDanhSachNha from "../components/Admin/BANQUANLY/QuanLyCuDan/DanhSachNha/index.vue";
@@ -7,19 +7,58 @@ import AdminYeuCauBT from "../components/Admin/BANQUANLY/BaoTri/YeuCauBT/index.v
 import AdminPhanCongBT from "../components/Admin/BANQUANLY/BaoTri/PhanCong/index.vue";
 import AdminHoaDon from "../components/Admin/BANQUANLY/TaiChinh/HoaDon/index.vue";
 
-import ResidentHome from "../components/Resident/Home/index.vue";
-import ResidentDashboard from "../components/Resident/Dashboard/index.vue";
-import ResidentHistory from "../components/Resident/History/index.vue";
-import ResidentReviews from "../components/Resident/Reviews/index.vue";
-import ResidentServices from "../components/Resident/Services/index.vue";
-import Login from "../components/Resident/Auth/Login.vue";
-import Register from "../components/Resident/Auth/Register.vue";
+import ResidentDashboard from "../components/Client/Dashboard/ClientDashboard.vue";
+import ResidentHistory from "../components/Client/History/ClientHistory.vue";
+import ResidentReviews from "../components/Client/Reviews/ClientReview.vue";
+import ResidentServices from "../components/Client/Services/ClientServices.vue";
+import Login from "../components/Client/Auth/Login.vue";
+import Register from "../components/Client/Auth/Register.vue";
+
 const routes = [
   {
-    path: "/",
-    component: Home,
-    meta: { layout: "Client" },
+  path: "/", redirect: "/admin",},
+  {
+    path: "/settings",
+    redirect: "/Client/dashboard",
   },
+  
+{
+path: "/Client/home",
+component: ClientHome,
+meta: { layout: "Client" },
+},
+{
+path: "/Client/dashboard",
+component: ResidentDashboard,
+meta: { layout: "Client" },
+},
+{
+path: "/Client/history",
+component: ResidentHistory,
+meta: { layout: "Client" },
+},
+{
+path: "/Client/reviews",
+component: ResidentReviews,
+meta: { layout: "Client" },
+},
+{
+path: "/Client/services",
+component: ResidentServices,
+meta: { layout: "Client" },
+},
+{
+path: "/Client/login",
+component: Login,
+meta: { layout: "Client" },
+},
+{
+path: "/Client/register",
+component: Register,
+meta: { layout: "Client" },
+},
+
+// ADMIN
   {
     path: "/admin",
     component: AdminHome,
@@ -49,42 +88,6 @@ const routes = [
     path: "/admin/tai-chinh/hoa-don",
     component: AdminHoaDon,
     meta: { layout: "Admin" },
-  },
-
-  {
-    path: "/resident",
-    component: ResidentHome,
-    meta: { layout: "Client" },
-  },
-  {
-    path: "/resident/dashboard",
-    component: ResidentDashboard,
-    meta: { layout: "Client" },
-  },
-  {
-    path: "/resident/history",
-    component: ResidentHistory,
-    meta: { layout: "Client" },
-  },
-  {
-    path: "/resident/reviews",
-    component: ResidentReviews,
-    meta: { layout: "Client" },
-  },
-  {
-    path: "/resident/services",
-    component: ResidentServices,
-    meta: { layout: "Client" },
-  },
-  {
-    path: "/resident/login",
-    component: Login,
-    meta: { layout: "Client" },
-  },
-  {
-    path: "/resident/register",
-    component: Register,
-    meta: { layout: "Client" },
   },
 ];
 

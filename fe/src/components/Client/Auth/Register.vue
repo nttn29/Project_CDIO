@@ -69,7 +69,7 @@
 
         <p class="footer-text">
           Đã có tài khoản?
-          <router-link to="/login">Đăng nhập</router-link>
+          <router-link to="/Client/login">Đăng nhập</router-link>
         </p>
       </form>
     </div>
@@ -79,11 +79,10 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/userStore'
-import api from '@/api/axios'
+import { register as apiRegister, user } from '@/services/api'
+import api from '@/services/api'
 
 const router = useRouter()
-const userStore = useUserStore()
 
 const name = ref('')
 const email = ref('')
@@ -99,8 +98,17 @@ const apartments = ref([])
 function translateError(message) {
   if (!message) return ''
   const lower = message.toLowerCase()
+  if (lower.includes('email already registered')) {
+    return 'Email đã được sử dụng'
+  }
   if (lower.includes('the email has already been taken')) {
     return 'Email đã được sử dụng'
+  }
+  if (lower.includes('password confirmation does not match')) {
+    return 'Xác nhận mật khẩu không khớp'
+  }
+  if (lower.includes('password must be at least')) {
+    return 'Mật khẩu phải có ít nhất 6 ký tự'
   }
   return message
 }
@@ -110,7 +118,7 @@ async function loadApartments() {
     const response = await api.get('/can-ho/available')
     apartments.value = response.data || []
   } catch (err) {
-    error.value = err?.error || err?.message || 'Không tải được danh sách căn hộ'
+    error.value = err?.response?.data?.message || err?.message || 'Không tải được danh sách căn hộ'
   }
 }
 
@@ -119,7 +127,7 @@ async function register() {
   error.value = ''
   try {
     const normalizedEmail = email.value.trim().toLowerCase()
-    await userStore.register({
+    await apiRegister({
       email: normalizedEmail,
       ten: name.value,
       dien_thoai: phone.value || null,
@@ -127,14 +135,16 @@ async function register() {
       mat_khau: password.value,
       mat_khau_confirmation: passwordConfirm.value,
     })
-    router.push('/')
+    // authService sets token and user
+    router.push('/Client/home')
   } catch (err) {
-    if (err?.errors) {
-      const firstKey = Object.keys(err.errors)[0]
-      const message = err.errors[firstKey]?.[0]
+    const errors = err?.response?.data?.errors || err?.errors
+    if (errors) {
+      const firstKey = Object.keys(errors)[0]
+      const message = errors[firstKey]?.[0] || err?.response?.data?.message
       error.value = translateError(message) || 'Đăng ký thất bại'
     } else {
-      const message = err?.error || err?.message
+      const message = err?.response?.data?.message || err?.error || err?.message
       error.value = translateError(message) || 'Đăng ký thất bại'
     }
   } finally {

@@ -7,6 +7,17 @@ use Illuminate\Support\Facades\DB;
 
 class CanHoController extends Controller
 {
+    public function available()
+    {
+        return DB::table('can_ho')
+            ->whereNull('id_cu_dan')
+            ->select(['id_can_ho', 'so_can_ho', 'tang', 'id_toa_nha'])
+            ->orderBy('id_toa_nha')
+            ->orderBy('tang')
+            ->orderBy('so_can_ho')
+            ->get();
+    }
+
     public function index()
     {
         return DB::table('can_ho')->get();

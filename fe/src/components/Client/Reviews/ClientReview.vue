@@ -86,15 +86,11 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useUserStore } from '@/stores/userStore'
-import { useRequestStore } from '@/stores/requestStore'
-import { feedbackService } from '@/api/feedbackService'
+import { user } from '@/services/api'
+import api from '@/services/api'
 
-const userStore = useUserStore()
-const requestStore = useRequestStore()
-
-const userId = computed(() => userStore.user?.id_nguoi_dung || null)
-const requests = computed(() => requestStore.requests || [])
+const userId = computed(() => user.value?.id_nguoi_dung || null)
+const requests = ref([])
 
 const form = ref({
   requestId: '',
@@ -119,7 +115,7 @@ const reviewedRequestIds = computed(() =>
 )
 
 const completedRequests = computed(() =>
-  requests.value.filter(
+  (requests.value || []).filter(
     (r) =>
       r.trang_thai === 'hoan_thanh' &&
       !reviewedRequestIds.value.has(r.id_yeu_cau)
@@ -131,7 +127,7 @@ async function loadReviews() {
   loadingList.value = true
   listError.value = ''
   try {
-    const response = await feedbackService.getFeedback({ id_cu_dan: userId.value })
+    const response = await api.get('/phan_hoi', { params: { id_cu_dan: userId.value } })
     reviews.value = response.data || []
   } catch (err) {
     listError.value = err?.error || err?.message || 'Không tải được đánh giá'
@@ -150,12 +146,14 @@ async function submitReview() {
   formError.value = ''
   success.value = ''
   try {
-    await feedbackService.submitFeedback({
+    const response = await api.post('/phan_hoi', {
       id_yeu_cau: form.value.requestId,
       id_cu_dan: userId.value,
       danh_gia: form.value.rating,
       binh_luan: form.value.comment || null,
     })
+    const json = response.data
+    if (!response || response.status >= 400) throw json
     form.value.comment = ''
     form.value.rating = 0
     form.value.requestId = ''
@@ -177,7 +175,12 @@ async function submitReview() {
 
 onMounted(async () => {
   if (!userId.value) return
-  await requestStore.getMyRequests(userId.value)
+  try {
+    const response = await api.get('/yeu_cau', { params: { id_cu_dan: userId.value } })
+    requests.value = response.data || []
+  } catch (err) {
+    listError.value = err?.error || err?.message || 'Không tải được yêu cầu'
+  }
   await loadReviews()
 })
 </script>

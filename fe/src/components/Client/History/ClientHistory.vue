@@ -57,21 +57,18 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRequestStore } from '@/stores/requestStore'
-import { useUserStore } from '@/stores/userStore'
-import { formatDate } from '@/utils/stringUtils'
-
-const requestStore = useRequestStore()
-const userStore = useUserStore()
+import { user } from '@/services/api'
+import api from '@/services/api'
+import { formatDate } from './utils'
 
 const loading = ref(false)
 const error = ref('')
+const requests = ref([])
 
 const typeFilter = ref('')
 const statusFilter = ref('')
 
-const userId = computed(() => userStore.user?.id_nguoi_dung || null)
-const requests = computed(() => requestStore.requests || [])
+const userId = computed(() => user.value?.id_nguoi_dung || null)
 
 const statusMap = {
   moi: { label: 'Mới', class: 'new' },
@@ -118,7 +115,8 @@ onMounted(async () => {
   loading.value = true
   error.value = ''
   try {
-    await requestStore.getMyRequests(userId.value)
+    const response = await api.get('/yeu-cau-bao-tri', { params: { id_cu_dan: userId.value } })
+    requests.value = response.data || []
   } catch (err) {
     error.value = err?.error || err?.message || 'Không tải được dữ liệu'
   } finally {

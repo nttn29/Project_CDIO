@@ -1,7 +1,7 @@
+<!-- Bot Bar - Footer & Chat Widget -->
 <template>
     <footer class="maintenance-footer">
-        <div class="footer-inner">
-            <div class="footer-content">
+        <div class="footer-content">
             <div class="footer-section about">
                 <h3 class="logo-text">CondoMaint<span class="highlight">System</span></h3>
                 <p>
@@ -51,16 +51,15 @@
             </div>
         </div>
 
-            <div class="footer-bottom">
-                <p>&copy; {{ currentYear }} Ban Quản Lý Chung cư. All rights reserved.</p>
-            </div>
+        <div class="footer-bottom">
+            <p>&copy; {{ currentYear }} Ban Quản Lý Chung cư. All rights reserved.</p>
         </div>
     </footer>
 </template>
 
 <script>
 export default {
-    name: "MainFooter",
+    name: "BotResident",
     data() {
         return {
             currentYear: new Date().getFullYear(), // Tự động cập nhật năm
@@ -72,32 +71,29 @@ export default {
 <style scoped>
 /* Reset cơ bản cho footer */
 .maintenance-footer {
-    background: transparent;
-}
-
-.footer-inner {
-    background-color: #1a252f;
-    color: #ecf0f1;
-    padding-top: 40px;
+    background-color: rgba(240, 250, 255, 0.95);
+    color: #2c3e50;
+    padding-top: 6px;
+    padding-bottom: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 14px;
+    font-size: 11.5px;
 }
 
 .footer-content {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 0 20px 40px;
+    padding: 0 12px 4px;
 }
 
 /* Style cho từng cột */
 .footer-section {
     flex: 1;
-    min-width: 250px;
-    margin-right: 20px;
-    margin-bottom: 20px;
+    min-width: 180px;
+    margin-right: 8px;
+    margin-bottom: 4px;
 }
 
 .footer-section:last-child {
@@ -105,29 +101,30 @@ export default {
 }
 
 h3 {
-    color: #fff;
-    margin-bottom: 20px;
-    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 4px;
+    font-size: 12.5px;
     font-weight: 600;
-    border-bottom: 2px solid #3498db;
+    border-bottom: 2px solid #6ec1e4;
     display: inline-block;
-    padding-bottom: 5px;
+    padding-bottom: 1px;
 }
 
 .logo-text {
-    font-size: 24px;
+    font-size: 14px;
     border: none;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .highlight {
-    color: #3498db;
+    color: #6ec1e4;
 }
 
 p {
-    line-height: 1.6;
-    color: #bdc3c7;
+    line-height: 1.3;
+    color: #5f6c7b;
+    margin-bottom: 4px;
 }
 
 /* Links List */
@@ -137,11 +134,11 @@ ul {
 }
 
 ul li {
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 ul li a {
-    color: #bdc3c7;
+    color: #2c3e50;
     text-decoration: none;
     transition: all 0.3s ease;
     display: flex;
@@ -149,8 +146,8 @@ ul li a {
 }
 
 ul li a:hover {
-    color: #3498db;
-    padding-left: 5px;
+    color: #6ec1e4;
+    padding-left: 3px;
     /* Hiệu ứng di chuyển nhẹ khi hover */
 }
 
@@ -158,12 +155,12 @@ ul li a:hover {
 .contact-item {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
 }
 
 .contact-item .icon {
-    font-size: 18px;
-    margin-right: 12px;
+    font-size: 14px;
+    margin-right: 8px;
     margin-top: 2px;
 }
 
@@ -174,7 +171,7 @@ ul li a:hover {
 
 .contact-item .label {
     font-weight: bold;
-    color: #95a5a6;
+    color: #5f6c7b;
     margin-bottom: 2px;
 }
 
@@ -182,21 +179,22 @@ ul li a:hover {
     color: #e74c3c;
     /* Màu đỏ cho Hotline để nổi bật */
     font-weight: bold;
-    font-size: 16px;
+    font-size: 12px;
 }
 
 /* Footer Bottom */
 .footer-bottom {
-    background-color: #141d26;
+    background-color: #ffffff;
     text-align: center;
-    padding: 15px 0;
-    margin-top: 20px;
-    border-top: 1px solid #2c3e50;
+    padding: 4px 0;
+    margin-top: 4px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .footer-bottom p {
     margin: 0;
-    font-size: 13px;
+    font-size: 11px;
+    color: #5f6c7b;
 }
 
 /* Responsive: Chuyển sang 1 cột trên mobile */
@@ -204,10 +202,9 @@ ul li a:hover {
     .footer-content {
         flex-direction: column;
     }
-
     .footer-section {
         margin-right: 0;
-        margin-bottom: 30px;
+        margin-bottom: 10px;
     }
 }
 </style>

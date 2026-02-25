@@ -79,7 +79,7 @@
 
         <p class="register-text">
           Chưa có tài khoản?
-          <router-link to="/register">Đăng ký</router-link>
+          <router-link to="/Client/register">Đăng ký</router-link>
         </p>
       </form>
     </section>
@@ -89,10 +89,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/userStore'
+import { login as apiLogin, user } from '@/services/api'
+import api from '@/services/api'
 
 const router = useRouter()
-const userStore = useUserStore()
 
 const email = ref('')
 const password = ref('')
@@ -115,7 +115,8 @@ async function login() {
   error.value = ''
   try {
     const normalizedEmail = email.value.trim().toLowerCase()
-    await userStore.login(normalizedEmail, password.value)
+    await apiLogin(normalizedEmail, password.value)
+    // user and token are set by api.login
     router.push('/')
   } catch (err) {
     const rawMessage =

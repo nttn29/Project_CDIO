@@ -13,10 +13,12 @@ export default {
   },
   computed: {
     layout() {
-      const layout = this.$route.meta.layout;
-      if (layout === "Admin") return index_admin;
-      return index_client;
-    }
+  if (this.$route.path.startsWith("/Client")) {
+    return index_client;
+  }
+  return index_admin;
+}
+
   }
 };
 </script>

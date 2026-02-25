@@ -55,12 +55,8 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useUserStore } from '@/stores/userStore'
-import { useRequestStore } from '@/stores/requestStore'
-import * as requestService from '@/api/requestService'
-
-const userStore = useUserStore()
-const requestStore = useRequestStore()
+import { user } from '@/services/api'
+import api from '@/services/api'
 
 const issueTypes = ref([])
 const selectedIssueId = ref('')
@@ -70,8 +66,8 @@ const loading = ref(false)
 const error = ref('')
 const success = ref('')
 
-const userId = computed(() => userStore.user?.id_nguoi_dung || null)
-const canHoId = computed(() => userStore.user?.can_ho?.id_can_ho || null)
+const userId = computed(() => user.value?.id_nguoi_dung || null)
+const canHoId = computed(() => user.value?.can_ho?.id_can_ho || null)
 
 function selectIssue(id) {
   selectedIssueId.value = id
@@ -88,13 +84,14 @@ async function submitRequest() {
   error.value = ''
   success.value = ''
   try {
-    await requestStore.createRequest({
+    const response = await api.post('/yeu_cau', {
       id_cu_dan: userId.value,
       id_can_ho: canHoId.value,
       id_loai_su_co: selectedIssueId.value,
       mo_ta: description.value.trim(),
       thoi_gian_uu_tien: priority.value,
     })
+    const data = response.data
     description.value = ''
     priority.value = 'binh_thuong'
     success.value = 'Đã gửi yêu cầu thành công!'
@@ -107,7 +104,7 @@ async function submitRequest() {
 
 onMounted(async () => {
   try {
-    const response = await requestService.getIssueTypes()
+    const response = await api.get('/loai-su-co')
     issueTypes.value = response.data || []
   } catch (err) {
     error.value = err?.error || err?.message || 'Không tải được danh sách dịch vụ'
@@ -172,6 +169,9 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 20px;
+  /* center grid and keep columns readable on wide screens */
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .service-card {
