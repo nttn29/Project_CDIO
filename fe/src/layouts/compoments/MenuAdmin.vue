@@ -11,33 +11,57 @@
           <p class="role">Admin Cấp Cao</p>
         </div>
       </div>
-      <button class="toggle-btn" @click="toggleSidebar" :class="{ 'btn-centered': isCollapsed }">
+      <button
+        class="toggle-btn"
+        @click="toggleSidebar"
+        :class="{ 'btn-centered': isCollapsed }"
+      >
         <i class="fas fa-bars"></i>
       </button>
     </div>
     <div class="sidebar-menu">
       <ul>
         <li v-for="(item, index) in menuItems" :key="index">
-          <a v-if="!item.children" :href="item.link" class="menu-item" :class="{ active: currentUrl === item.link }"
-            :title="isCollapsed ? item.title : ''">
+          <a
+            v-if="!item.children"
+            :href="item.link"
+            class="menu-item"
+            :class="{ active: currentUrl === item.link }"
+            :title="isCollapsed ? item.title : ''"
+          >
             <i :class="['item-icon', item.icon]"></i>
             <span class="item-text" v-if="!isCollapsed">{{ item.title }}</span>
           </a>
 
-          <div v-else class="submenu-wrapper" :class="{ 'is-open': item.isOpen }">
-            <div class="menu-item parent" @click="toggleSubmenu(index)" :class="{ expanded: item.isOpen }"
-              :title="isCollapsed ? item.title : ''">
+          <div
+            v-else
+            class="submenu-wrapper"
+            :class="{ 'is-open': item.isOpen }"
+          >
+            <div
+              class="menu-item parent"
+              @click="toggleSubmenu(index)"
+              :class="{ expanded: item.isOpen }"
+              :title="isCollapsed ? item.title : ''"
+            >
               <div class="label-group">
                 <i :class="['item-icon', item.icon]"></i>
                 <span class="item-text" v-if="!isCollapsed">{{
                   item.title
                 }}</span>
               </div>
-              <i v-if="!isCollapsed" class="fas fa-chevron-right arrow-icon" :class="{ rotated: item.isOpen }"></i>
+              <i
+                v-if="!isCollapsed"
+                class="fas fa-chevron-right arrow-icon"
+                :class="{ rotated: item.isOpen }"
+              ></i>
             </div>
 
             <ul class="submenu" v-show="item.isOpen && !isCollapsed">
-              <li v-for="(child, childIndex) in item.children" :key="childIndex">
+              <li
+                v-for="(child, childIndex) in item.children"
+                :key="childIndex"
+              >
                 <a :href="child.link" class="submenu-link">
                   <span class="dot"></span>
                   {{ child.title }}

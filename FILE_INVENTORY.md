@@ -159,16 +159,34 @@ src/
 
 ---
 
-### **API Services Layer** (consolidated)
-7. ✅ **src/services/api.js** (80 lines)
+### **API Services Layer** (4 files, ~250 lines)
+7. ✅ **src/api/axios.js** (40 lines)
    - Axios instance creation
-   - Base URL logic (dev proxy: '/api' → VITE_PROXY_TARGET; prod: VITE_API_BASE_URL or '/DKMN_BE/public/api')
-   - Request interceptor (auth token from reactive `token`)
-   - Exports: `api` (default), `user`, `token`, `isAuthenticated`, `login`, `register`, `logout`, `setUser`, `setToken`
+   - Request interceptor (auth token)
+   - Response interceptor (error handling)
+   - 401 error redirect to login
 
-8. ✅ **Service usage**
-   - Components call backend via `src/services/api.js` (e.g., `api.get`, `api.post`, or `login/register` helpers)
-   - Removed redundant per-service files; logic consolidated into `api.js` and components
+8. ✅ **src/api/authService.js** (25 lines)
+   - register(data)
+   - login(email, password)
+   - getProfile(id)
+   - updateProfile(id, data)
+
+9. ✅ **src/api/requestService.js** (60 lines)
+   - getIssueTypes()
+   - CRUD operations
+   - uploadImage()
+   - deleteImage()
+   - Notifications
+
+10. ✅ **src/api/feedbackService.js** (35 lines)
+    - submitFeedback()
+    - getFeedback()
+    - deleteFeedback()
+    - getRating()
+
+11. ✅ **src/api/index.js** (3 lines)
+    - Consolidated API exports
 
 ---
 

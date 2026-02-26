@@ -1,4 +1,3 @@
-<!-- Bot Bar - Footer & Chat Widget -->
 <template>
     <footer class="maintenance-footer">
         <div class="footer-content">
@@ -59,7 +58,7 @@
 
 <script>
 export default {
-    name: "BotResident",
+    name: "MainFooter",
     data() {
         return {
             currentYear: new Date().getFullYear(), // Tự động cập nhật năm
@@ -71,29 +70,29 @@ export default {
 <style scoped>
 /* Reset cơ bản cho footer */
 .maintenance-footer {
-    background-color: rgba(240, 250, 255, 0.95);
-    color: #2c3e50;
-    padding-top: 6px;
-    padding-bottom: 0;
+    background-color: #1a252f;
+    /* Màu xanh đen chuyên nghiệp */
+    color: #ecf0f1;
+    padding-top: 40px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 11.5px;
+    font-size: 14px;
 }
 
 .footer-content {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 12px 4px;
+    padding: 0 20px 40px;
 }
 
 /* Style cho từng cột */
 .footer-section {
     flex: 1;
-    min-width: 180px;
-    margin-right: 8px;
-    margin-bottom: 4px;
+    min-width: 250px;
+    margin-right: 20px;
+    margin-bottom: 20px;
 }
 
 .footer-section:last-child {
@@ -101,30 +100,29 @@ export default {
 }
 
 h3 {
-    color: #2c3e50;
-    margin-bottom: 4px;
-    font-size: 12.5px;
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 18px;
     font-weight: 600;
-    border-bottom: 2px solid #6ec1e4;
+    border-bottom: 2px solid #3498db;
     display: inline-block;
-    padding-bottom: 1px;
+    padding-bottom: 5px;
 }
 
 .logo-text {
-    font-size: 14px;
+    font-size: 24px;
     border: none;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .highlight {
-    color: #6ec1e4;
+    color: #3498db;
 }
 
 p {
-    line-height: 1.3;
-    color: #5f6c7b;
-    margin-bottom: 4px;
+    line-height: 1.6;
+    color: #bdc3c7;
 }
 
 /* Links List */
@@ -134,11 +132,11 @@ ul {
 }
 
 ul li {
-    margin-bottom: 6px;
+    margin-bottom: 12px;
 }
 
 ul li a {
-    color: #2c3e50;
+    color: #bdc3c7;
     text-decoration: none;
     transition: all 0.3s ease;
     display: flex;
@@ -146,8 +144,8 @@ ul li a {
 }
 
 ul li a:hover {
-    color: #6ec1e4;
-    padding-left: 3px;
+    color: #3498db;
+    padding-left: 5px;
     /* Hiệu ứng di chuyển nhẹ khi hover */
 }
 
@@ -155,12 +153,12 @@ ul li a:hover {
 .contact-item {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 8px;
+    margin-bottom: 15px;
 }
 
 .contact-item .icon {
-    font-size: 14px;
-    margin-right: 8px;
+    font-size: 18px;
+    margin-right: 12px;
     margin-top: 2px;
 }
 
@@ -171,7 +169,7 @@ ul li a:hover {
 
 .contact-item .label {
     font-weight: bold;
-    color: #5f6c7b;
+    color: #95a5a6;
     margin-bottom: 2px;
 }
 
@@ -179,22 +177,21 @@ ul li a:hover {
     color: #e74c3c;
     /* Màu đỏ cho Hotline để nổi bật */
     font-weight: bold;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 /* Footer Bottom */
 .footer-bottom {
-    background-color: #ffffff;
+    background-color: #141d26;
     text-align: center;
-    padding: 4px 0;
-    margin-top: 4px;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 15px 0;
+    margin-top: 20px;
+    border-top: 1px solid #2c3e50;
 }
 
 .footer-bottom p {
     margin: 0;
-    font-size: 11px;
-    color: #5f6c7b;
+    font-size: 13px;
 }
 
 /* Responsive: Chuyển sang 1 cột trên mobile */
@@ -202,9 +199,10 @@ ul li a:hover {
     .footer-content {
         flex-direction: column;
     }
+
     .footer-section {
         margin-right: 0;
-        margin-bottom: 10px;
+        margin-bottom: 30px;
     }
 }
 </style>

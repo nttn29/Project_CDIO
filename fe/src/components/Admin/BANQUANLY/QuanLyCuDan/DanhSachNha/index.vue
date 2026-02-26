@@ -6,7 +6,11 @@
         <h1>Quản lý chủ căn hộ</h1>
 
         <div class="actions">
-          <input v-model="keyword" type="text" placeholder="Tìm theo tên, CCCD, số nhà..." />
+          <input
+            v-model="keyword"
+            type="text"
+            placeholder="Tìm theo tên, CCCD, số nhà..."
+          />
           <button class="btn add" @click="openAdd">+ Thêm mới</button>
         </div>
       </div>
@@ -243,12 +247,10 @@ export default {
   background: #3498db;
   color: #fff;
 }
-
 .actions-col {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  /* khoảng cách giữa nút */
+  gap: 8px; /* khoảng cách giữa nút */
 }
 
 .btn.delete {

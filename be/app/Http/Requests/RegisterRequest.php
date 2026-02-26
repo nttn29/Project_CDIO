@@ -26,7 +26,6 @@ class RegisterRequest extends FormRequest
             'ten' => 'required|string|max:255',
             'mat_khau' => 'required|string|min:6|confirmed',
             'dien_thoai' => 'nullable|string|max:20',
-            'id_can_ho' => 'required|exists:can_ho,id_can_ho',
             'vai_tro' => 'nullable|in:cu_dan,nhan_vien,quan_ly,admin',
         ];
     }
@@ -40,8 +39,6 @@ class RegisterRequest extends FormRequest
             'mat_khau.required' => 'Password is required',
             'mat_khau.min' => 'Password must be at least 6 characters',
             'mat_khau.confirmed' => 'Password confirmation does not match',
-            'id_can_ho.required' => 'Apartment is required',
-            'id_can_ho.exists' => 'Apartment does not exist',
         ];
     }
 }
