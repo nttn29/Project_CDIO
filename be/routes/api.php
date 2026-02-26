@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
 // ============ PUBLIC ROUTES ============
 // Authentication
 Route::post('register', [\App\Http\Controllers\AuthController::class, 'register']);
@@ -77,10 +78,31 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('nhat_ky', [\App\Http\Controllers\NhatKyCongViecController::class, 'index']);
 });
+ // ====== CHỦ CĂN HỘ ======
+    Route::get('chu-can-ho', [\App\Http\Controllers\Chu_can_hoController::class, 'index']);
+    Route::post('chu-can-ho', [\App\Http\Controllers\Chu_can_hoController::class, 'store']);
+    Route::get('chu-can-ho/{id}', [\App\Http\Controllers\Chu_can_hoController::class, 'show']);
+    Route::put('chu-can-ho/{id}', [\App\Http\Controllers\Chu_can_hoController::class, 'update']);
+    Route::delete('chu-can-ho/{id}', [\App\Http\Controllers\Chu_can_hoController::class, 'destroy']);
+// sodo nha
+Route::get('so-do-toa-nha', [\App\Http\Controllers\Chu_can_hoController::class, 'soDo']);
+//Yeu cầu bảo trì===
+use App\Http\Controllers\YeuCauBtController;
 
+Route::get('yeu-cau-bt', [YeuCauBtController::class, 'index']);
+Route::post('yeu-cau-bt', [YeuCauBtController::class, 'store']);
+Route::put('yeu-cau-bt/{id}', [YeuCauBtController::class, 'updateStatus']);
+Route::delete('yeu-cau-bt/{id}', [YeuCauBtController::class, 'destroy']);
+Route::put('yeu-cau-bt/{id}', [YeuCauBtController::class, 'update']);
+Route::get('/yeu-cau-bt/{id}', [YeuCauBtController::class, 'show']);
+Route::get('/hoa-don', [YeuCauBtController::class, 'invoices']);
+//Ky thuật viên
+use App\Http\Controllers\KyThuatVienController;
+Route::get('ky-thuat-vien', [KyThuatVienController::class, 'index']);
 // ============ ADMIN ROUTES ============
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('users', [\App\Http\Controllers\NguoiDungController::class, 'index']);
     Route::post('users', [\App\Http\Controllers\NguoiDungController::class, 'store']);
     Route::delete('users/{id}', [\App\Http\Controllers\NguoiDungController::class, 'destroy']);
-});
+   });
+ 
