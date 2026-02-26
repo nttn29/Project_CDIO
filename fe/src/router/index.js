@@ -6,6 +6,7 @@ import AdminDanhSachNha from "../components/Admin/BANQUANLY/QuanLyCuDan/DanhSach
 import AdminYeuCauBT from "../components/Admin/BANQUANLY/BaoTri/YeuCauBT/index.vue";
 import AdminPhanCongBT from "../components/Admin/BANQUANLY/BaoTri/PhanCong/index.vue";
 import AdminHoaDon from "../components/Admin/BANQUANLY/TaiChinh/HoaDon/index.vue";
+import TechnicianHome from "../technician/home/TechnicianHome.vue";
 const routes = [
   {
     path: "/",
@@ -42,11 +43,74 @@ const routes = [
     component: AdminHoaDon,
     meta: { layout: "Admin" },
   },
+  {
+    path: "/login-tech",
+    component: () => import("../technician/auth/TechnicianLogin.vue"),
+  },
+  {
+    path: "/technician-login",
+    component: () => import("../technician/auth/TechnicianLogin.vue"),
+  },
+  {
+    path: "/technician-register",
+    component: () => import("../technician/auth/TechnicianLogin.vue"),
+  },
+  {
+    path: "/technician",
+    component: TechnicianHome,
+    meta: { layout: "Technician" },
+  },
+  {
+    path: "/technician/jobs",
+    component: () => import("../technician/features/TechnicianJobs.vue"),
+    meta: { layout: "Technician" },
+  },
+  {
+    path: "/technician/job-detail",
+    component: () => import("../technician/features/TechnicianJobDetail.vue"),
+    meta: { layout: "Technician" },
+  },
+  {
+    path: "/technician/schedule",
+    component: () => import("../technician/features/TechnicianSchedule.vue"),
+    meta: { layout: "Technician" },
+  },
+  {
+    path: "/technician/status",
+    component: () => import("../technician/features/TechnicianStatus.vue"),
+    meta: { layout: "Technician" },
+  },
+  {
+    path: "/technician/history",
+    component: () => import("../technician/features/TechnicianHistory.vue"),
+    meta: { layout: "Technician" },
+  },
+  {
+    path: "/technician/profile",
+    component: () => import("../technician/features/TechnicianProfile.vue"),
+    meta: { layout: "Technician" },
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  const isTechnicianRoute = to.path.startsWith("/technician");
+  const isTechAuthPage = to.path === "/login-tech";
+  const isAuthed = localStorage.getItem("tech_auth") === "1";
+
+  if (isTechnicianRoute && !isAuthed) {
+    return next("/login-tech");
+  }
+
+  if (isTechAuthPage && isAuthed) {
+    return next("/technician");
+  }
+
+  next();
 });
 
 export default router;
