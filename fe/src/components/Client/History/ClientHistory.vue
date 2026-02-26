@@ -29,27 +29,59 @@
         <table>
           <thead>
             <tr>
-              <th>Dịch vụ</th>
+              <th>Sự cố</th>
               <th>Ngày gửi</th>
               <th>Trạng thái</th>
+              <th></th>
             </tr>
           </thead>
 
           <tbody>
             <tr v-for="item in filteredRows" :key="item.id">
-              <td>{{ item.service }}</td>
+              <td>
+                <div class="issue-title">{{ item.service }}</div>
+                <div class="issue-desc">{{ item.description }}</div>
+              </td>
               <td>{{ item.date }}</td>
               <td>
                 <span :class="['status', item.statusClass]">
                   {{ item.status }}
                 </span>
               </td>
+              <td class="actions-col">
+                <button class="detail-btn" @click="openDetails(item)">Xem chi tiết</button>
+              </td>
             </tr>
             <tr v-if="filteredRows.length === 0">
-              <td colspan="3" class="empty">Chưa có yêu cầu nào.</td>
+              <td colspan="4" class="empty">Chưa có yêu cầu nào.</td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div v-if="selectedRow" class="overlay" @click.self="closeDetails">
+      <div class="detail-modal">
+        <div class="detail-header">
+          <h3>Chi tiết yêu cầu #{{ selectedRow.id }}</h3>
+          <button class="close-btn" @click="closeDetails">×</button>
+        </div>
+
+        <div class="detail-grid">
+          <div><strong>Sự cố:</strong> {{ selectedRow.service }}</div>
+          <div><strong>Ngày gửi:</strong> {{ selectedRow.date }}</div>
+          <div class="full-row"><strong>Mô tả:</strong> {{ selectedRow.description }}</div>
+          <div><strong>Mức ưu tiên:</strong> {{ selectedRow.priorityLabel }}</div>
+          <div><strong>Trạng thái:</strong> {{ selectedRow.status }}</div>
+          <div>
+            <strong>Đã xác nhận:</strong>
+            <span :class="['confirm-tag', selectedRow.confirmed ? 'yes' : 'no']">
+              {{ selectedRow.confirmed ? 'Đã xác nhận' : 'Chưa xác nhận' }}
+            </span>
+          </div>
+          <div><strong>Thời gian sửa dự kiến:</strong> {{ selectedRow.scheduledAt }}</div>
+          <div><strong>Thời gian xong dự kiến:</strong> {{ selectedRow.estimatedDoneAt }}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -64,6 +96,7 @@ import { formatDate } from './utils'
 const loading = ref(false)
 const error = ref('')
 const requests = ref([])
+const selectedRow = ref(null)
 
 const typeFilter = ref('')
 const statusFilter = ref('')
@@ -81,13 +114,21 @@ const statusMap = {
 const rows = computed(() =>
   requests.value.map((r) => {
     const status = statusMap[r.trang_thai] || { label: r.trang_thai, class: 'processing' }
+    const scheduleDate = buildScheduleDate(r.phan_cong?.ngay_phan_cong, r.phan_cong?.gio_hen)
+    const scheduleAt = scheduleDate ? formatDate(scheduleDate.toISOString()) : 'Chưa có lịch'
+    const estimatedDoneAt = estimateDoneTime(scheduleDate, r.thoi_gian_uu_tien)
     return {
       id: r.id_yeu_cau,
       service: r.loai_su_co?.ten_loai || 'N/A',
-      date: formatDate(r.created_at),
+      description: r.mo_ta || 'Chưa có mô tả chi tiết',
+      date: formatDate(r.created_at) || 'Chưa có',
       status: status.label,
       statusClass: status.class,
       rawStatus: r.trang_thai,
+      confirmed: !!r.da_xac_nhan,
+      priorityLabel: priorityLabel(r.thoi_gian_uu_tien),
+      scheduledAt: scheduleAt,
+      estimatedDoneAt,
     }
   })
 )
@@ -109,6 +150,37 @@ const filteredRows = computed(() => {
     return okType && okStatus
   })
 })
+
+function priorityLabel(value) {
+  if (value === 'gan') return 'Gấp'
+  if (value === 'binh_thuong') return 'Bình thường'
+  if (value === 'kho') return 'Khó'
+  return 'Chưa xác định'
+}
+
+function buildScheduleDate(date, time) {
+  if (!date) return null
+  const raw = time ? `${date}T${time}` : `${date}T00:00:00`
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function estimateDoneTime(scheduleDate, priority) {
+  if (!scheduleDate) return 'Chưa có dự kiến'
+
+  const extraHours = priority === 'gan' ? 2 : priority === 'binh_thuong' ? 8 : 24
+  const start = new Date(scheduleDate.getTime())
+  start.setHours(start.getHours() + extraHours)
+  return start.toLocaleString()
+}
+
+function openDetails(item) {
+  selectedRow.value = item
+}
+
+function closeDetails() {
+  selectedRow.value = null
+}
 
 onMounted(async () => {
   if (!userId.value) return
@@ -220,5 +292,99 @@ tbody tr {
 .empty {
   text-align: center;
   color: #94a3b8;
+}
+
+.issue-title {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.issue-desc {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.actions-col {
+  text-align: right;
+}
+
+.detail-btn {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.detail-btn:hover {
+  background: #eef2ff;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.detail-modal {
+  width: min(760px, 92vw);
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.detail-header h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  color: #334155;
+}
+
+.full-row {
+  grid-column: 1 / -1;
+}
+
+.confirm-tag {
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.confirm-tag.yes {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.confirm-tag.no {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 </style>

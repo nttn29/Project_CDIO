@@ -50,6 +50,9 @@
                 <div class="user-name big">
                   {{ isAuthenticated ? userName : 'Chưa đăng nhập' }}
                 </div>
+                <div v-if="isAuthenticated && userRoom" class="user-room">
+                  Căn hộ: {{ userRoom }}
+                </div>
                 <div class="user-role">Cư dân</div>
               </div>
 
@@ -122,7 +125,13 @@ const userAvatar = computed(() => user.value?.avatar || 'https://cdn-icons-png.f
 
 const userName = computed(() => user.value?.ten || user.value?.name || 'Resident')
 
-const userRoom = computed(() => user.value?.can_ho?.so_can_ho || user.value?.so_can_ho || user.value?.so_phong || '')
+const userRoom = computed(() =>
+  user.value?.can_ho?.so_can_ho ||
+  user.value?.canHo?.so_can_ho ||
+  user.value?.so_can_ho ||
+  user.value?.so_phong ||
+  (user.value?.id_can_ho ? `#${user.value.id_can_ho}` : '')
+)
 
 function logout(e) {
   e.preventDefault()
