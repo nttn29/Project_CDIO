@@ -15,6 +15,8 @@ class YeuCauBaoTriController extends Controller
 
         $query = DB::table('yeu_cau_bao_tri as y')
             ->leftJoin('loai_su_co as l', 'l.id_loai_su_co', '=', 'y.id_loai_su_co')
+            ->leftJoin('nguoi_dung as nd', 'nd.id_nguoi_dung', '=', 'y.id_cu_dan')
+            ->leftJoin('can_ho as c', 'c.id_can_ho', '=', 'y.id_can_ho')
             ->leftJoinSub($latestAssignment, 'latest_p', function ($join) {
                 $join->on('latest_p.id_yeu_cau', '=', 'y.id_yeu_cau');
             })
@@ -25,7 +27,10 @@ class YeuCauBaoTriController extends Controller
                 'p.id_phan_cong',
                 'p.ngay_phan_cong',
                 'p.gio_hen',
-                'p.trang_thai as trang_thai_phan_cong'
+                'p.trang_thai as trang_thai_phan_cong',
+                'nd.ten as ten_chu_ho',
+                'nd.dien_thoai as sdt_chu_ho',
+                'c.so_can_ho'
             );
 
         if ($request->filled('id_cu_dan')) {
@@ -39,6 +44,13 @@ class YeuCauBaoTriController extends Controller
             ->map(function ($row) {
                 $item = (array) $row;
                 $item['loai_su_co'] = ['ten_loai' => $row->ten_loai];
+                $item['chu_ho'] = [
+                    'ten' => $row->ten_chu_ho,
+                    'dien_thoai' => $row->sdt_chu_ho
+                ];
+                $item['can_ho'] = [
+                    'so_can_ho' => $row->so_can_ho
+                ];
                 $item['phan_cong'] = [
                     'id_phan_cong' => $row->id_phan_cong,
                     'ngay_phan_cong' => $row->ngay_phan_cong,
@@ -48,6 +60,7 @@ class YeuCauBaoTriController extends Controller
                 $item['da_xac_nhan'] = in_array($row->trang_thai, ['da_xac_nhan', 'dang_xu_ly', 'hoan_thanh'], true)
                     || !empty($row->id_phan_cong);
                 unset($item['ten_loai']);
+                unset($item['ten_chu_ho'], $item['sdt_chu_ho'], $item['so_can_ho']);
                 unset($item['id_phan_cong'], $item['ngay_phan_cong'], $item['gio_hen'], $item['trang_thai_phan_cong']);
                 return $item;
             });
@@ -78,5 +91,15 @@ class YeuCauBaoTriController extends Controller
     {
         DB::table('yeu_cau_bao_tri')->where('id_yeu_cau', $id)->delete();
         return response()->noContent();
+    }
+
+    public function changeStatus(Request $request, $id)
+    {
+        $status = $request->input('status');
+        DB::table('yeu_cau_bao_tri')->where('id_yeu_cau', $id)->update(['trang_thai' => $status]);
+
+        // Note: the frontend may also submit scheduleDate and staff, but those belong in phan_cong table.
+        // For now, updating the status of the request.
+        return response()->json(['message' => 'Cập nhật trạng thái thành công']);
     }
 }

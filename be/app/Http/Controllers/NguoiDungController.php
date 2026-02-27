@@ -9,7 +9,10 @@ class NguoiDungController extends Controller
 {
     public function index()
     {
-        return DB::table('nguoi_dung')->get();
+        return DB::table('nguoi_dung')
+            ->leftJoin('can_ho', 'can_ho.id_cu_dan', '=', 'nguoi_dung.id_nguoi_dung')
+            ->select('nguoi_dung.*', 'can_ho.so_can_ho')
+            ->get();
     }
 
     public function show($id)
@@ -33,5 +36,18 @@ class NguoiDungController extends Controller
     {
         DB::table('nguoi_dung')->where('id_nguoi_dung', $id)->delete();
         return response()->noContent();
+    }
+
+    public function technicians()
+    {
+        return DB::table('nguoi_dung')
+            ->whereIn('vai_tro', ['nhan_vien', 'technician'])
+            ->where(function ($q) {
+                $q->whereNull('trang_thai')
+                    ->orWhere('trang_thai', 'active');
+            })
+            ->select('id_nguoi_dung', 'ten', 'email', 'dien_thoai', 'vai_tro', 'trang_thai')
+            ->orderBy('ten')
+            ->get();
     }
 }

@@ -11,37 +11,61 @@
           <p class="role">Admin Cấp Cao</p>
         </div>
       </div>
-      <button class="toggle-btn" @click="toggleSidebar" :class="{ 'btn-centered': isCollapsed }">
+      <button
+        class="toggle-btn"
+        @click="toggleSidebar"
+        :class="{ 'btn-centered': isCollapsed }"
+      >
         <i class="fas fa-bars"></i>
       </button>
     </div>
     <div class="sidebar-menu">
       <ul>
         <li v-for="(item, index) in menuItems" :key="index">
-          <a v-if="!item.children" :href="item.link" class="menu-item" :class="{ active: currentUrl === item.link }"
-            :title="isCollapsed ? item.title : ''">
+          <router-link
+            v-if="!item.children"
+            :to="item.link"
+            class="menu-item"
+            exact-active-class="active"
+            :title="isCollapsed ? item.title : ''"
+          >
             <i :class="['item-icon', item.icon]"></i>
             <span class="item-text" v-if="!isCollapsed">{{ item.title }}</span>
-          </a>
+          </router-link>
 
-          <div v-else class="submenu-wrapper" :class="{ 'is-open': item.isOpen }">
-            <div class="menu-item parent" @click="toggleSubmenu(index)" :class="{ expanded: item.isOpen }"
-              :title="isCollapsed ? item.title : ''">
+          <div
+            v-else
+            class="submenu-wrapper"
+            :class="{ 'is-open': item.isOpen }"
+          >
+            <div
+              class="menu-item parent"
+              @click="toggleSubmenu(index)"
+              :class="{ expanded: item.isOpen }"
+              :title="isCollapsed ? item.title : ''"
+            >
               <div class="label-group">
                 <i :class="['item-icon', item.icon]"></i>
                 <span class="item-text" v-if="!isCollapsed">{{
                   item.title
                 }}</span>
               </div>
-              <i v-if="!isCollapsed" class="fas fa-chevron-right arrow-icon" :class="{ rotated: item.isOpen }"></i>
+              <i
+                v-if="!isCollapsed"
+                class="fas fa-chevron-right arrow-icon"
+                :class="{ rotated: item.isOpen }"
+              ></i>
             </div>
 
             <ul class="submenu" v-show="item.isOpen && !isCollapsed">
-              <li v-for="(child, childIndex) in item.children" :key="childIndex">
-                <a :href="child.link" class="submenu-link">
+              <li
+                v-for="(child, childIndex) in item.children"
+                :key="childIndex"
+              >
+                <router-link :to="child.link" class="submenu-link" exact-active-class="active-submenu">
                   <span class="dot"></span>
                   {{ child.title }}
-                </a>
+                </router-link>
               </li>
             </ul>
           </div>
@@ -64,12 +88,11 @@ export default {
   data() {
     return {
       isCollapsed: false,
-      currentUrl: "/admin/dashboard",
       menuItems: [
         {
           title: "Dashboard",
           icon: "fas fa-chart-line",
-          link: "/admin/dashboard",
+          link: "/admin",
           children: null,
         },
         {
@@ -77,8 +100,8 @@ export default {
           icon: "fas fa-user-friends",
           isOpen: false,
           children: [
-            { title: "Danh sách", link: "/admin/residents" },
-            { title: "Sơ đồ nhà", link: "/admin/apartments" },
+            { title: "Danh sách", link: "/admin/qlcd/danh-sach-nha" },
+            { title: "Sơ đồ nhà", link: "/admin/qlcd/so-do-nha" },
           ],
         },
         {
@@ -86,15 +109,15 @@ export default {
           icon: "fas fa-tools",
           isOpen: true,
           children: [
-            { title: "Yêu cầu", link: "/admin/requests" },
-            { title: "Phân công", link: "/admin/assign-tasks" },
+            { title: "Yêu cầu", link: "/admin/bao-tri/yeu-cau" },
+            { title: "Phân công", link: "/admin/bao-tri/phan-cong" },
           ],
         },
         {
           title: "Tài Chính",
           icon: "fas fa-wallet",
           isOpen: false,
-          children: [{ title: "Hóa đơn", link: "/admin/bills" }],
+          children: [{ title: "Hóa đơn", link: "/admin/tai-chinh/hoa-don" }],
         },
         {
           title: "Hệ thống",
@@ -106,6 +129,10 @@ export default {
     };
   },
   methods: {
+    applySidebarWidth() {
+      const width = this.isCollapsed ? "70px" : "260px";
+      document.documentElement.style.setProperty("--admin-sidebar-width", width);
+    },
     toggleSidebar() {
       this.isCollapsed = !this.isCollapsed;
       if (this.isCollapsed) {
@@ -113,13 +140,21 @@ export default {
           if (item.children) item.isOpen = false;
         });
       }
+      this.applySidebarWidth();
     },
     toggleSubmenu(index) {
       if (this.isCollapsed) {
         this.isCollapsed = false;
+        this.applySidebarWidth();
       }
       this.menuItems[index].isOpen = !this.menuItems[index].isOpen;
     },
+  },
+  mounted() {
+    this.applySidebarWidth();
+  },
+  beforeUnmount() {
+    document.documentElement.style.removeProperty("--admin-sidebar-width");
   },
 };
 </script>
@@ -344,6 +379,7 @@ export default {
   transition: 0.2s;
 }
 
+.submenu-link.active-submenu,
 .submenu-link:hover {
   color: #ffffff !important;
   background-color: rgba(255, 255, 255, 0.1);

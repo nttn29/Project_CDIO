@@ -8,8 +8,8 @@
             <div class="page-content">
                 <router-view></router-view>
             </div>
-            <BotAdmin></BotAdmin>
         </div>
+        <BotAdmin></BotAdmin>
     </div>
 </template>
 <script>
@@ -40,6 +40,28 @@ export default {
 
 /* Ensure main page content sits below the fixed header (70px) */
 .page-wrapper {
-    padding-top: 80px;
+    /* header is 70px tall; give a little spacing but not too much */
+    padding-top: 60px;
+    margin-left: var(--admin-sidebar-width, 260px);
+    transition: margin-left 0.3s ease-in-out;
+    min-height: 100vh;
+    /* allow horizontal scrolling when content is wide */
+    overflow-x: auto;
+    /* add some default horizontal padding so content isn't flush against the edge */
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+/* page-content wrapper may need a little top padding too */
+.page-content {
+    padding-top: 8px;
+}
+
+@media (max-width: 991.98px) {
+    .page-wrapper {
+        margin-left: 0;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
 }
 </style>

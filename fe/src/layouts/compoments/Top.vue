@@ -84,16 +84,17 @@ export default {
             isScrolled: false,
 
             residentMenu: [
-                { text: "Trang chủ", link: "/" },
-                { text: "Báo cáo sự cố", link: "/bao-cao" },
-                { text: "Lịch sử", link: "/lich-su" },
-                { text: "Hóa đơn", link: "/hoa-don" },
+                { text: "Trang chủ", link: "/Client/home" },
+                { text: "Báo cáo sự cố", link: "/Client/dashboard" },
+                { text: "Lịch sử", link: "/Client/history" },
+                { text: "Dịch vụ", link: "/Client/services" },
             ],
             adminMenu: [
-                { text: "Dashboard", link: "/admin/dashboard" },
-                { text: "Công việc", link: "/admin/work-orders" },
-                { text: "Cư dân", link: "/admin/residents" },
-                { text: "Phân công", link: "/admin/assign" },
+                { text: "Trang chủ", link: "/admin" },
+                { text: "Danh sách Cư dân", link: "/admin/qlcd/danh-sach-nha" },
+                { text: "Yêu cầu", link: "/admin/bao-tri/yeu-cau" },
+                { text: "Phân công", link: "/admin/bao-tri/phan-cong" },
+                { text: "Hóa đơn", link: "/admin/tai-chinh/hoa-don" },
             ],
         };
     },
@@ -143,6 +144,9 @@ export default {
     left: 0;
     right: 0;
     z-index: 900;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     height: 70px;
     font-family: 'Inter', 'Segoe UI', sans-serif;
     transition: all 0.3s ease;
@@ -156,6 +160,7 @@ export default {
 
 .header-container {
     max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 0 24px;
     height: 100%;
