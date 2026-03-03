@@ -142,6 +142,7 @@ function logout(e) {
 /* ===== MENU ===== */
 const menuItems = [
   { text: 'Trang chủ', link: '/Client/home', icon: 'fas fa-home' },
+  { text: 'Báo cáo sự cố', link: '/Client/dashboard', icon: 'fas fa-exclamation-triangle' },
   { text: 'Dịch vụ', link: '/Client/services', icon: 'fas fa-concierge-bell' },
   { text: 'Lịch sử', link: '/Client/history', icon: 'fas fa-clock' },
   { text: 'Đánh giá', link: '/Client/reviews', icon: 'fas fa-star' },

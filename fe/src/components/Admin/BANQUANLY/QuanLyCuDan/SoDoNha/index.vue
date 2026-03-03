@@ -108,7 +108,7 @@ export default {
     },
 
     goToRequest(roomCode) {
-      this.$router.push(`/admin/requests/${roomCode}`);
+      this.$router.push(`/admin/bao-tri/yeu-cau?room=${roomCode}`);
     },
 
     addRequest(roomCode) {
@@ -154,7 +154,9 @@ export default {
   background: linear-gradient(135deg, #eef1f6, #f8f9fc);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 32px;
+  padding-bottom: 32px;
   font-family: "Segoe UI", sans-serif;
 }
 

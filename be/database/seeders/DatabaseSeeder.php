@@ -17,12 +17,20 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if (!User::where('email', 'test@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
 
-        // Run client/resident seeder
+        // Run client/resident seeder first (tạo cư dân + yêu cầu bảo trì)
         $this->call(ClientSeeder::class);
+
+        // Run technician seeder (tạo kỹ thuật viên + phân công + nhật ký)
+        $this->call(TechnicianSeeder::class);
+
+        // Run apartment owner seeder (tạo chủ căn hộ đầy đủ 5 tầng)
+        $this->call(ApartmentOwnerSeeder::class);
     }
 }

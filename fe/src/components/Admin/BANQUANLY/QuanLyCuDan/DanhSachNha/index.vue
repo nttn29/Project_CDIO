@@ -3,10 +3,15 @@
     <div class="container">
       <!-- HEADER -->
       <div class="header">
-        <h1>Quản lý chủ căn hộ</h1>
+        <h5>Quản lý chủ căn hộ</h5>
 
         <div class="actions">
           <input v-model="keyword" type="text" placeholder="Tìm theo tên, CCCD, số nhà..." />
+          <input
+            v-model="keyword"
+            type="text"
+            placeholder="Tìm theo tên, CCCD, số nhà..."
+          />
           <button class="btn add" @click="openAdd">+ Thêm mới</button>
         </div>
       </div>
@@ -27,14 +32,14 @@
         </thead>
 
         <tbody>
-          <tr v-for="(item, index) in filteredOwners" :key="item.cccd">
+          <tr v-for="(item, index) in filteredOwners" :key="item.id_nguoi_dung">
             <td>{{ index + 1 }}</td>
-            <td>{{ item.fullName }}</td>
-            <td>{{ item.cccd }}</td>
-            <td>{{ item.phone }}</td>
-            <td>{{ item.address }}</td>
-            <td>{{ item.roomCode }}</td>
-            <td>{{ item.registerDate }}</td>
+            <td>{{ item.ten || item.fullName }}</td>
+            <td>{{ item.cccd || 'Không có' }}</td>
+            <td>{{ item.dien_thoai || item.phone }}</td>
+            <td>{{ item.address || 'Không có' }}</td>
+            <td>{{ item.so_can_ho || item.roomCode || 'Không có' }}</td>
+            <td>{{ item.created_at ? new Date(item.created_at).toLocaleDateString() : item.registerDate }}</td>
             <td class="actions-col">
               <button class="btn edit" @click="openEdit(item)">Sửa</button>
               <button class="btn delete" @click="remove(item)">Xoá</button>
@@ -55,11 +60,9 @@
 
         <div class="form">
           <input v-model="form.fullName" placeholder="Họ tên" />
-          <input v-model="form.cccd" placeholder="CCCD" />
+          <input v-model="form.email" placeholder="Email (dùng để đăng nhập)" />
           <input v-model="form.phone" placeholder="Số điện thoại" />
-          <input v-model="form.address" placeholder="Địa chỉ thường trú" />
-          <input v-model="form.roomCode" placeholder="Số nhà (VD: A1001)" />
-          <input v-model="form.registerDate" type="date" />
+          <input v-model="form.password" type="password" placeholder="Mật khẩu" v-if="!isEdit" />
         </div>
 
         <div class="modal-actions">
@@ -74,6 +77,8 @@
 </template>
 
 <script>
+import api from '@/services/api';
+
 export default {
   name: "DanhSachNha",
 
@@ -83,34 +88,20 @@ export default {
       showModal: false,
       isEdit: false,
 
-      owners: [
-        {
-          fullName: "Nguyễn Văn A",
-          cccd: "079203001234",
-          phone: "0901234567",
-          address: "Hải Châu, Đà Nẵng",
-          roomCode: "A1001",
-          registerDate: "2025-01-12",
-        },
-        {
-          fullName: "Trần Thị B",
-          cccd: "049198009876",
-          phone: "0912345678",
-          address: "Liên Chiểu, Đà Nẵng",
-          roomCode: "A802",
-          registerDate: "2025-01-20",
-        },
-      ],
+      owners: [],
 
       form: {
+        id_nguoi_dung: null,
         fullName: "",
-        cccd: "",
+        email: "",
         phone: "",
-        address: "",
-        roomCode: "",
-        registerDate: "",
+        password: "",
       },
     };
+  },
+
+  mounted() {
+    this.fetchUsers();
   },
 
   computed: {
@@ -118,46 +109,82 @@ export default {
       const key = this.keyword.toLowerCase();
       return this.owners.filter(
         (o) =>
-          o.fullName.toLowerCase().includes(key) ||
-          o.cccd.includes(key) ||
-          o.roomCode.toLowerCase().includes(key),
+          (o.ten || o.fullName || "").toLowerCase().includes(key) ||
+          (o.cccd || "").includes(key) ||
+          (o.so_can_ho || o.roomCode || "").toLowerCase().includes(key),
       );
     },
   },
 
   methods: {
+    async fetchUsers() {
+      try {
+        const res = await api.get('/users');
+        this.owners = res.data.filter(u => u.vai_tro !== 'admin' && u.vai_tro !== 'technician');
+      } catch (err) {
+        console.error("Lỗi lấy danh sách cư dân:", err);
+      }
+    },
+
     openAdd() {
       this.isEdit = false;
       this.form = {
+        id_nguoi_dung: null,
         fullName: "",
-        cccd: "",
+        email: "",
         phone: "",
-        address: "",
-        roomCode: "",
-        registerDate: "",
+        password: "",
       };
       this.showModal = true;
     },
 
     openEdit(item) {
       this.isEdit = true;
-      this.form = { ...item };
+      this.form = { 
+        id_nguoi_dung: item.id_nguoi_dung,
+        fullName: item.ten || item.fullName,
+        email: item.email || "",
+        phone: item.dien_thoai || item.phone,
+        password: "",
+      };
       this.showModal = true;
     },
 
-    save() {
-      if (this.isEdit) {
-        const index = this.owners.findIndex((o) => o.cccd === this.form.cccd);
-        if (index !== -1) this.owners[index] = { ...this.form };
-      } else {
-        this.owners.push({ ...this.form });
+    async save() {
+      try {
+        if (this.isEdit) {
+            // Note: API users/{id} update endpoint is /users/{id} but api.php does not route PUT /users/{id} to NguoiDungController@update explicitly for admin
+            // Wait, api.php doesn't have PUT users/{id} inside ADMIN ROUTES. But it has it under RESIDENT ROUTES: `Route::put('users/{id}', ...)`
+            await api.put(`/users/${this.form.id_nguoi_dung}`, {
+                ten: this.form.fullName,
+                email: this.form.email,
+                dien_thoai: this.form.phone,
+            });
+        } else {
+            await api.post('/users', {
+                ten: this.form.fullName,
+                email: this.form.email,
+                dien_thoai: this.form.phone,
+                mat_khau: this.form.password,
+                vai_tro: 'resident',
+                trang_thai: 'active'
+            });
+        }
+        await this.fetchUsers();
+        this.close();
+      } catch (err) {
+        alert("Có lỗi xảy ra khi lưu: " + (err?.response?.data?.message || err.message));
       }
-      this.close();
     },
 
-    remove(item) {
-      if (confirm("Bạn chắc chắn muốn xoá?")) {
-        this.owners = this.owners.filter((o) => o.cccd !== item.cccd);
+    async remove(item) {
+      if (confirm("Bạn chắc chắn muốn xoá cư dân này?")) {
+        try {
+          await api.delete(`/users/${item.id_nguoi_dung}`);
+          await this.fetchUsers();
+        } catch (err) {
+          alert("Không thể xóa cư dân.");
+        }
       }
     },
 
@@ -243,12 +270,10 @@ export default {
   background: #3498db;
   color: #fff;
 }
-
 .actions-col {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  /* khoảng cách giữa nút */
+  gap: 8px; /* khoảng cách giữa nút */
 }
 
 .btn.delete {

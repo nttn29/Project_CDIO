@@ -74,9 +74,9 @@
           <div><strong>Mức ưu tiên:</strong> {{ selectedRow.priorityLabel }}</div>
           <div><strong>Trạng thái:</strong> {{ selectedRow.status }}</div>
           <div>
-            <strong>Đã xác nhận:</strong>
+            <strong>Đã duyệt:</strong>
             <span :class="['confirm-tag', selectedRow.confirmed ? 'yes' : 'no']">
-              {{ selectedRow.confirmed ? 'Đã xác nhận' : 'Chưa xác nhận' }}
+              {{ selectedRow.confirmed ? 'Đã duyệt' : 'Chưa duyệt' }}
             </span>
           </div>
           <div><strong>Thời gian sửa dự kiến:</strong> {{ selectedRow.scheduledAt }}</div>
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { user } from '@/services/api'
 import api from '@/services/api'
 import { formatDate } from './utils'
@@ -100,47 +100,45 @@ const selectedRow = ref(null)
 
 const typeFilter = ref('')
 const statusFilter = ref('')
+let refreshTimer = null
 
 const userId = computed(() => user.value?.id_nguoi_dung || null)
 
 const statusMap = {
   moi: { label: 'Mới', class: 'new' },
-  da_xac_nhan: { label: 'Đã xác nhận', class: 'confirm' },
+  cho_xu_ly: { label: 'Chờ xử lý', class: 'new' },
+  da_xac_nhan: { label: 'Đã duyệt', class: 'confirm' },
   dang_xu_ly: { label: 'Đang xử lý', class: 'processing' },
   hoan_thanh: { label: 'Hoàn thành', class: 'done' },
   huy: { label: 'Đã hủy', class: 'cancel' },
 }
 
-const rows = computed(() =>
-  requests.value.map((r) => {
-    const status = statusMap[r.trang_thai] || { label: r.trang_thai, class: 'processing' }
-    const scheduleDate = buildScheduleDate(r.phan_cong?.ngay_phan_cong, r.phan_cong?.gio_hen)
-    const scheduleAt = scheduleDate ? formatDate(scheduleDate.toISOString()) : 'Chưa có lịch'
-    const estimatedDoneAt = estimateDoneTime(scheduleDate, r.thoi_gian_uu_tien)
-    return {
-      id: r.id_yeu_cau,
-      service: r.loai_su_co?.ten_loai || 'N/A',
-      description: r.mo_ta || 'Chưa có mô tả chi tiết',
-      date: formatDate(r.created_at) || 'Chưa có',
-      status: status.label,
-      statusClass: status.class,
-      rawStatus: r.trang_thai,
-      confirmed: !!r.da_xac_nhan,
-      priorityLabel: priorityLabel(r.thoi_gian_uu_tien),
-      scheduledAt: scheduleAt,
-      estimatedDoneAt,
-    }
-  })
-)
+function toRow(r) {
+  const status = statusMap[r.trang_thai] || { label: r.trang_thai, class: 'processing' }
+  const scheduleDate = buildScheduleDate(r.phan_cong?.ngay_phan_cong, r.phan_cong?.gio_hen)
+  const scheduleAt = scheduleDate ? formatDate(scheduleDate.toISOString()) : 'Chưa có lịch'
+  const estimatedDoneAt = estimateDoneTime(scheduleDate, r.thoi_gian_uu_tien)
+  return {
+    id: r.id_yeu_cau,
+    service: r.loai_su_co?.ten_loai || 'N/A',
+    description: r.mo_ta || 'Chưa có mô tả chi tiết',
+    date: formatDate(r.created_at) || 'Chưa có',
+    status: status.label,
+    statusClass: status.class,
+    rawStatus: r.trang_thai,
+    confirmed: !!r.da_xac_nhan,
+    priorityLabel: priorityLabel(r.thoi_gian_uu_tien),
+    scheduledAt: scheduleAt,
+    estimatedDoneAt,
+  }
+}
 
-const typeOptions = computed(() => {
-  const set = new Set(rows.value.map((r) => r.service).filter(Boolean))
-  return Array.from(set)
-})
+const rows = computed(() => requests.value.map(toRow))
+
+const typeOptions = ref([])
 
 const statusOptions = computed(() => {
-  const set = new Set(rows.value.map((r) => r.status).filter(Boolean))
-  return Array.from(set)
+  return ['Mới', 'Chờ xử lý', 'Đã duyệt', 'Đang xử lý', 'Hoàn thành', 'Đã hủy']
 })
 
 const filteredRows = computed(() => {
@@ -182,18 +180,51 @@ function closeDetails() {
   selectedRow.value = null
 }
 
-onMounted(async () => {
+async function fetchRequests() {
   if (!userId.value) return
   loading.value = true
   error.value = ''
   try {
     const response = await api.get('/yeu-cau-bao-tri', { params: { id_cu_dan: userId.value } })
     requests.value = response.data || []
+    if (selectedRow.value?.id) {
+      const latest = requests.value.find((r) => r.id_yeu_cau === selectedRow.value.id)
+      if (latest) selectedRow.value = toRow(latest)
+    }
   } catch (err) {
-    error.value = err?.error || err?.message || 'Không tải được dữ liệu'
+    error.value = err?.response?.data?.message || err?.message || 'Không tải được dữ liệu'
   } finally {
     loading.value = false
   }
+}
+
+function handleVisibilityOrFocus() {
+  if (!document.hidden) {
+    fetchRequests()
+  }
+}
+
+onMounted(async () => {
+  await fetchRequests()
+
+  try {
+    const resTypes = await api.get('/loai-su-co')
+    if (resTypes.data && resTypes.data.length > 0) {
+      typeOptions.value = resTypes.data.map(i => i.ten_loai).filter(Boolean)
+    }
+  } catch (err) {
+    console.error('Không tải được danh mục sự cố:', err)
+  }
+
+  window.addEventListener('focus', handleVisibilityOrFocus)
+  document.addEventListener('visibilitychange', handleVisibilityOrFocus)
+  refreshTimer = setInterval(fetchRequests, 15000)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', handleVisibilityOrFocus)
+  document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 </script>
 

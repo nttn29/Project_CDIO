@@ -10,71 +10,86 @@
       <table class="table">
         <thead>
           <tr>
-            <th>STT</th>
+            <th style="width: 50px;">STT</th>
             <th>Chủ hộ</th>
             <th>SĐT</th>
-            <th>Số nhà</th>
+            <th style="width: 80px;">Số nhà</th>
             <th>Nội dung yêu cầu</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
+            <th style="width: 120px;">Trạng thái</th>
+            <th style="width: 150px;">Thao tác</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="(req, index) in requests" :key="req.id">
+          <tr v-for="(req, index) in requests" :key="req.id_yeu_cau">
             <td>{{ index + 1 }}</td>
-            <td>{{ req.owner }}</td>
-            <td>{{ req.phone }}</td>
-            <td>{{ req.roomCode }}</td>
-            <td class="content">{{ req.content }}</td>
+            <td>{{ req.chu_ho ? req.chu_ho.ten : 'Chưa có' }}</td>
+            <td>{{ req.chu_ho ? req.chu_ho.dien_thoai : 'Chưa có' }}</td>
+            <td>{{ req.can_ho ? req.can_ho.so_can_ho : 'Chưa có' }}</td>
+            <td class="content">{{ req.mo_ta }}</td>
 
             <td>
-              <span class="status" :class="req.status">
-                {{ statusText(req.status) }}
+              <span class="status" :class="req.trang_thai">
+                {{ statusText(req.trang_thai) }}
               </span>
             </td>
 
             <td class="actions-col">
-              <button
-                class="btn approve"
-                :class="{ hidden: req.status !== 'pending' }"
-                @click="openModal(req)"
-              >
-                Xử lý
-              </button>
+              <div class="btn-group">
+                <button
+                  v-if="canApprove(req.trang_thai)"
+                  class="btn approve"
+                  @click="approveRequest(req)"
+                >
+                  Duyệt
+                </button>
+              </div>
             </td>
           </tr>
 
-          <tr v-if="requests.length === 0">
+          <tr v-if="requests.length === 0 && !loading">
             <td colspan="7" class="empty">Không có yêu cầu</td>
+          </tr>
+          <tr v-if="loading">
+            <td colspan="7" class="empty">Đang tải...</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- MODAL XỬ LÝ -->
+    <Teleport to="body">
     <div v-if="showModal" class="modal">
       <div class="modal-box">
         <h2>Xử lý yêu cầu</h2>
 
         <div class="info">
-          <p><b>Chủ hộ:</b> {{ selected.owner }}</p>
-          <p><b>Số nhà:</b> {{ selected.roomCode }}</p>
-          <p><b>Nội dung:</b> {{ selected.content }}</p>
+          <p><b>Chủ hộ:</b> {{ selected.chu_ho ? selected.chu_ho.ten : 'Chưa có' }}</p>
+          <p><b>Số nhà:</b> {{ selected.can_ho ? selected.can_ho.so_can_ho : 'Chưa có' }}</p>
+          <p><b>Nội dung:</b> {{ selected.mo_ta }}</p>
         </div>
 
         <div class="form">
-          <label>Phản hồi</label>
+          <label>Phản hồi phương thức xử lý</label>
           <select v-model="form.status">
-            <option value="approved">Chấp thuận</option>
-            <option value="rejected">Từ chối</option>
+            <option value="dang_xu_ly">Chấp thuận (Đang xử lý)</option>
+            <option value="tu_choi">Từ chối</option>
           </select>
 
-          <label>Ngày bảo trì</label>
-          <input type="date" v-model="form.date" />
+          <!-- 
+          The backend API would require pushing assignment details to the phan_cong table.
+          For now, tracking visually.
+          -->
+          <label v-if="form.status === 'dang_xu_ly'">Ngày bảo trì</label>
+          <input v-if="form.status === 'dang_xu_ly'" type="date" v-model="form.date" />
 
-          <label>Phân công nhân viên</label>
-          <input type="text" v-model="form.staff" placeholder="Tên nhân viên" />
+          <label v-if="form.status === 'dang_xu_ly'">Phân công nhân viên</label>
+          <select v-if="form.status === 'dang_xu_ly'" v-model="form.staff">
+            <option value="" disabled>-- Chọn kỹ thuật viên --</option>
+            <option v-for="tech in technicians" :key="tech.id_nguoi_dung" :value="tech.id_nguoi_dung">
+              {{ tech.ten || tech.name }}
+            </option>
+          </select>
         </div>
 
         <div class="modal-actions">
@@ -83,76 +98,88 @@
         </div>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 
 <script>
+import api from '@/services/api';
+
 export default {
   name: "YeuCauBaoTri",
 
   data() {
     return {
-      showModal: false,
-      selected: {},
-
-      requests: [
-        {
-          id: 1,
-          owner: "Nguyễn Văn A",
-          phone: "0901234567",
-          roomCode: "A1001",
-          content: "Máy lạnh không lạnh",
-          status: "pending",
-        },
-        {
-          id: 2,
-          owner: "Trần Thị B",
-          phone: "0912345678",
-          roomCode: "A802",
-          content: "Rò rỉ nước nhà vệ sinh",
-          status: "approved",
-        },
-      ],
-
-      form: {
-        status: "approved",
-        date: "",
-        staff: "",
-      },
+      loading: true,
+      requests: [],
     };
   },
 
+  mounted() {
+    this.fetchRequests();
+  },
+
   methods: {
-    openModal(req) {
-      this.selected = req;
-      this.form = {
-        status: "approved",
-        date: "",
-        staff: "",
-      };
-      this.showModal = true;
+    async fetchRequests() {
+      try {
+        this.loading = true;
+        // Use public resident-compatible endpoint.
+        // `/yeu_cau` is currently protected by auth:sanctum in backend route order.
+        const res = await api.get('/yeu-cau-bao-tri');
+        let data = res.data;
+        const roomFilter = this.$route.query.room;
+        if (roomFilter) {
+          data = data.filter(req => req.can_ho && req.can_ho.so_can_ho === roomFilter);
+        }
+        this.requests = data;
+      } catch (error) {
+        // Backward fallback for deployments that only expose `/yeu_cau`.
+        try {
+          const fallback = await api.get('/yeu_cau');
+          let fallbackData = fallback.data;
+          const roomFilter = this.$route.query.room;
+          if (roomFilter) {
+            fallbackData = fallbackData.filter(req => req.can_ho && req.can_ho.so_can_ho === roomFilter);
+          }
+          this.requests = fallbackData;
+        } catch (fallbackError) {
+          console.error("Lỗi khi lấy yêu cầu bảo trì:", fallbackError);
+        }
+      } finally {
+        this.loading = false;
+      }
     },
 
-    closeModal() {
-      this.showModal = false;
+    canApprove(status) {
+      return ['moi', 'cho_xu_ly', 'pending'].includes(status);
     },
 
-    submit() {
-      this.selected.status = this.form.status;
-
-      // DEMO: lưu thêm thông tin xử lý
-      this.selected.scheduleDate = this.form.date;
-      this.selected.staff = this.form.staff;
-
-      this.closeModal();
+    async approveRequest(req) {
+      try {
+        await api.post(`/yeu-cau-bao-tri/${req.id_yeu_cau}/status`, {
+          status: 'da_xac_nhan'
+        });
+        req.trang_thai = 'da_xac_nhan';
+        this.$router.push({ path: '/admin/bao-tri/phan-cong', query: { highlight: req.id_yeu_cau } });
+      } catch (error) {
+        console.error("Lỗi duyệt yêu cầu:", error);
+        alert('Duyệt yêu cầu không thành công');
+      }
     },
 
     statusText(status) {
-      return {
+      const map = {
+        moi: "Mới",
+        cho_xu_ly: "Chờ xử lý",
         pending: "Chờ xử lý",
+        da_xac_nhan: "Đã duyệt",
+        dang_xu_ly: "Đang xử lý",
         approved: "Đã chấp thuận",
+        hoan_thanh: "Hoàn thành",
+        tu_choi: "Đã từ chối",
         rejected: "Đã từ chối",
-      }[status];
+      };
+      return map[status] || status;
     },
   },
 };
@@ -182,6 +209,7 @@ export default {
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* consistent column widths and avoid weird wrapping */
 }
 
 .table th,
@@ -189,6 +217,10 @@ export default {
   padding: 12px;
   border-bottom: 1px solid #ddd;
   text-align: center;
+  /* do not allow cells to wrap their contents */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .table th {
@@ -211,17 +243,34 @@ export default {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
+  /* keep the text on one line so the badge doesn't break */
+  white-space: nowrap;
+  display: inline-block;
 }
 
+.status.cho_xu_ly,
 .status.pending {
   background: #f1c40f;
+  color: #333;
+}
+.status.moi,
+.status.da_xac_nhan {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
+.status.dang_xu_ly,
 .status.approved {
+  background: #3498db;
+  color: #fff;
+}
+
+.status.hoan_thanh {
   background: #2ecc71;
   color: #fff;
 }
 
+.status.tu_choi,
 .status.rejected {
   background: #e74c3c;
   color: #fff;
@@ -229,8 +278,14 @@ export default {
 
 /* BUTTON */
 .actions-col {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.btn-group {
   display: flex;
   justify-content: center;
+  gap: 8px;
 }
 
 .btn {
@@ -243,6 +298,10 @@ export default {
 
 .btn.approve {
   background: #3498db;
+  color: #fff;
+}
+.btn.process {
+  background: #10b981;
   color: #fff;
 }
 
@@ -263,7 +322,10 @@ export default {
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 60px;
+  overflow-y: auto;
+  z-index: 9999;
 }
 
 .modal-box {
@@ -302,8 +364,5 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-}
-.hidden {
-  visibility: hidden; /* chiếm chỗ nhưng không hiện */
 }
 </style>

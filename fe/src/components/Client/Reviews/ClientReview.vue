@@ -89,7 +89,7 @@ import { computed, onMounted, ref } from 'vue'
 import { user } from '@/services/api'
 import api from '@/services/api'
 
-const userId = computed(() => user.value?.id_nguoi_dung || null)
+const userId = computed(() => user.value?.id_nguoi_dung || user.value?.id || null)
 const requests = ref([])
 
 const form = ref({
@@ -114,10 +114,18 @@ const reviewedRequestIds = computed(() =>
   )
 )
 
+function isCompletedRequest(request) {
+  const normalize = (value) => String(value || '').trim().toLowerCase()
+  const doneStatuses = new Set(['hoan_thanh', 'completed', 'done', 'da_hoan_thanh'])
+  const requestStatus = normalize(request?.trang_thai)
+  const assignmentStatus = normalize(request?.phan_cong?.trang_thai)
+  return doneStatuses.has(requestStatus) || doneStatuses.has(assignmentStatus)
+}
+
 const completedRequests = computed(() =>
   (requests.value || []).filter(
     (r) =>
-      r.trang_thai === 'hoan_thanh' &&
+      isCompletedRequest(r) &&
       !reviewedRequestIds.value.has(r.id_yeu_cau)
   )
 )
@@ -128,7 +136,10 @@ async function loadReviews() {
   listError.value = ''
   try {
     const response = await api.get('/phan_hoi', { params: { id_cu_dan: userId.value } })
-    reviews.value = response.data || []
+    const allReviews = response.data || []
+    reviews.value = allReviews.filter(
+      (item) => String(item?.id_cu_dan) === String(userId.value)
+    )
   } catch (err) {
     listError.value = err?.error || err?.message || 'Không tải được đánh giá'
   } finally {
@@ -176,10 +187,20 @@ async function submitReview() {
 onMounted(async () => {
   if (!userId.value) return
   try {
-    const response = await api.get('/yeu_cau', { params: { id_cu_dan: userId.value } })
+    const response = await api.get('/yeu-cau-bao-tri', { params: { id_cu_dan: userId.value } })
     requests.value = response.data || []
   } catch (err) {
-    listError.value = err?.error || err?.message || 'Không tải được yêu cầu'
+    try {
+      const fallback = await api.get('/yeu_cau', { params: { id_cu_dan: userId.value } })
+      requests.value = fallback.data || []
+    } catch (fallbackErr) {
+      listError.value =
+        fallbackErr?.error ||
+        fallbackErr?.message ||
+        err?.error ||
+        err?.message ||
+        'Không tải được yêu cầu'
+    }
   }
   await loadReviews()
 })

@@ -1,47 +1,67 @@
 <template>
   <aside class="admin-sidebar" :class="{ collapsed: isCollapsed }">
     <div class="sidebar-brand">
-      <div class="admin-profile" v-if="!isCollapsed">
-        <div class="profile-img">
-          <img src="https://i.pravatar.cc/150?img=12" alt="Admin" />
-          <div class="status-dot"></div>
+      <div class="brand-wrapper" v-if="!isCollapsed">
+        <div class="logo-box">
+          <i class="fas fa-building"></i>
         </div>
-        <div class="profile-info">
-          <p class="name">Quản Lý Tuấn</p>
-          <p class="role">Admin Cấp Cao</p>
-        </div>
+        <span class="brand-text">EcoHome</span>
       </div>
-      <button class="toggle-btn" @click="toggleSidebar" :class="{ 'btn-centered': isCollapsed }">
+      <button
+        class="toggle-btn"
+        @click="toggleSidebar"
+        :class="{ 'btn-centered': isCollapsed }"
+      >
         <i class="fas fa-bars"></i>
       </button>
     </div>
     <div class="sidebar-menu">
       <ul>
         <li v-for="(item, index) in menuItems" :key="index">
-          <a v-if="!item.children" :href="item.link" class="menu-item" :class="{ active: currentUrl === item.link }"
-            :title="isCollapsed ? item.title : ''">
+          <router-link
+            v-if="!item.children"
+            :to="item.link"
+            class="menu-item"
+            exact-active-class="active"
+            :title="isCollapsed ? item.title : ''"
+          >
             <i :class="['item-icon', item.icon]"></i>
             <span class="item-text" v-if="!isCollapsed">{{ item.title }}</span>
-          </a>
+          </router-link>
 
-          <div v-else class="submenu-wrapper" :class="{ 'is-open': item.isOpen }">
-            <div class="menu-item parent" @click="toggleSubmenu(index)" :class="{ expanded: item.isOpen }"
-              :title="isCollapsed ? item.title : ''">
+          <div
+            v-else
+            class="submenu-wrapper"
+            :class="{ 'is-open': item.isOpen }"
+          >
+            <div
+              class="menu-item parent"
+              @click="toggleSubmenu(index)"
+              :class="{ expanded: item.isOpen }"
+              :title="isCollapsed ? item.title : ''"
+            >
               <div class="label-group">
                 <i :class="['item-icon', item.icon]"></i>
                 <span class="item-text" v-if="!isCollapsed">{{
                   item.title
                 }}</span>
               </div>
-              <i v-if="!isCollapsed" class="fas fa-chevron-right arrow-icon" :class="{ rotated: item.isOpen }"></i>
+              <i
+                v-if="!isCollapsed"
+                class="fas fa-chevron-right arrow-icon"
+                :class="{ rotated: item.isOpen }"
+              ></i>
             </div>
 
             <ul class="submenu" v-show="item.isOpen && !isCollapsed">
-              <li v-for="(child, childIndex) in item.children" :key="childIndex">
-                <a :href="child.link" class="submenu-link">
+              <li
+                v-for="(child, childIndex) in item.children"
+                :key="childIndex"
+              >
+                <router-link :to="child.link" class="submenu-link" exact-active-class="active-submenu">
                   <span class="dot"></span>
                   {{ child.title }}
-                </a>
+                </router-link>
               </li>
             </ul>
           </div>
@@ -50,7 +70,7 @@
     </div>
 
     <div class="sidebar-footer">
-      <a href="#" class="logout-link" :title="isCollapsed ? 'Đăng xuất' : ''">
+      <a href="#" class="logout-link" :title="isCollapsed ? 'Đăng xuất' : ''" @click.prevent="handleLogout">
         <i class="fas fa-sign-out-alt"></i>
         <span v-if="!isCollapsed">Đăng xuất</span>
       </a>
@@ -59,17 +79,29 @@
 </template>
 
 <script>
+import { useRouter } from 'vue-router';
+
 export default {
   name: "AdminSidebar",
+  setup() {
+    const router = useRouter();
+    function handleLogout() {
+      if (confirm('Bạn có chắc muốn đăng xuất không?')) {
+        localStorage.removeItem('admin_auth');
+        localStorage.removeItem('admin_user');
+        router.push('/admin/login');
+      }
+    }
+    return { handleLogout };
+  },
   data() {
     return {
       isCollapsed: false,
-      currentUrl: "/admin/dashboard",
       menuItems: [
         {
           title: "Dashboard",
           icon: "fas fa-chart-line",
-          link: "/admin/dashboard",
+          link: "/admin",
           children: null,
         },
         {
@@ -77,8 +109,8 @@ export default {
           icon: "fas fa-user-friends",
           isOpen: false,
           children: [
-            { title: "Danh sách", link: "/admin/residents" },
-            { title: "Sơ đồ nhà", link: "/admin/apartments" },
+            { title: "Danh sách", link: "/admin/qlcd/danh-sach-nha" },
+            { title: "Sơ đồ nhà", link: "/admin/qlcd/so-do-nha" },
           ],
         },
         {
@@ -86,15 +118,24 @@ export default {
           icon: "fas fa-tools",
           isOpen: true,
           children: [
-            { title: "Yêu cầu", link: "/admin/requests" },
-            { title: "Phân công", link: "/admin/assign-tasks" },
+            { title: "Yêu cầu", link: "/admin/bao-tri/yeu-cau" },
+            { title: "Phân công", link: "/admin/bao-tri/phan-cong" },
           ],
         },
         {
           title: "Tài Chính",
           icon: "fas fa-wallet",
           isOpen: false,
-          children: [{ title: "Hóa đơn", link: "/admin/bills" }],
+          children: [
+            { title: "Hóa đơn", link: "/admin/tai-chinh/hoa-don" },
+            { title: "Quản lý Chi Phí", link: "/admin/tai-chinh/chi-phi" },
+          ],
+        },
+        {
+          title: "Kho Vật Tư",
+          icon: "fas fa-boxes",
+          link: "/admin/kho-vat-tu",
+          children: null,
         },
         {
           title: "Hệ thống",
@@ -106,6 +147,10 @@ export default {
     };
   },
   methods: {
+    applySidebarWidth() {
+      const width = this.isCollapsed ? "70px" : "260px";
+      document.documentElement.style.setProperty("--admin-sidebar-width", width);
+    },
     toggleSidebar() {
       this.isCollapsed = !this.isCollapsed;
       if (this.isCollapsed) {
@@ -113,23 +158,30 @@ export default {
           if (item.children) item.isOpen = false;
         });
       }
+      this.applySidebarWidth();
     },
     toggleSubmenu(index) {
       if (this.isCollapsed) {
         this.isCollapsed = false;
+        this.applySidebarWidth();
       }
       this.menuItems[index].isOpen = !this.menuItems[index].isOpen;
     },
   },
+  mounted() {
+    this.applySidebarWidth();
+  },
+  beforeUnmount() {
+    document.documentElement.style.removeProperty("--admin-sidebar-width");
+  },
 };
 </script>
 <style scoped>
-/* --- 1. Tổng thể Sidebar (Vivid Blue Theme) --- */
+/* --- 1. Tổng thể Sidebar (Deep Navy Theme) --- */
 .admin-sidebar {
   width: 260px;
   height: 100vh;
-  /* Nền Xanh Dương Tươi (Gradient) */
-  background: linear-gradient(180deg, #007bff 0%, #0062cc 100%);
+  background: linear-gradient(180deg, #3b6cb7 0%, #2a539e 100%);
   color: #ffffff;
   /* Ép toàn bộ chữ mặc định là màu trắng */
   display: flex;
@@ -173,7 +225,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #007bff;
+  color: #3b6cb7;
 }
 
 .brand-text {
@@ -206,44 +258,7 @@ export default {
   margin: 0 auto;
 }
 
-/* --- 3. Profile (Sửa lỗi chữ đen tại đây) --- */
-.admin-profile {
-  display: flex;
-  align-items: center;
-  padding: 20px 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  background-color: rgba(0, 0, 0, 0.1);
-  /* Nền tối nhẹ để làm nổi chữ trắng */
-}
-
-.profile-img img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid white;
-}
-
-.profile-info {
-  margin-left: 10px;
-  white-space: nowrap;
-}
-
-/* QUAN TRỌNG: Ép màu chữ profile thành trắng */
-.name {
-  color: #ffffff !important;
-  font-weight: 700;
-  font-size: 14px;
-  margin: 0;
-}
-
-.role {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8) !important;
-  /* Trắng mờ chút */
-  margin-top: 2px;
-}
-
-/* --- 4. Menu Items (Sửa lỗi chữ menu cha bị đen) --- */
+/* --- 3. Menu Items --- */
 .sidebar-menu {
   flex: 1;
   overflow-y: auto;
@@ -285,18 +300,16 @@ export default {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* --- Active State (Đảo màu: Nền trắng - Chữ xanh) --- */
+/* --- Active State (Đảo màu: Nền trắng - Chữ navy) --- */
 .menu-item.active {
   background-color: #ffffff !important;
-  color: #0062cc !important;
-  /* Chữ chuyển sang xanh đậm khi chọn */
+  color: #3b6cb7 !important;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .menu-item.active .item-icon {
-  color: #0062cc !important;
-  /* Icon cũng chuyển xanh */
+  color: #3b6cb7 !important;
 }
 
 /* Collapsed Logic */
@@ -329,8 +342,7 @@ export default {
 }
 
 .submenu {
-  background-color: rgba(0, 0, 0, 0.2);
-  /* Nền tối hơn cho menu con */
+  background-color: rgba(0, 0, 0, 0.25);
 }
 
 .submenu-link {
@@ -344,6 +356,7 @@ export default {
   transition: 0.2s;
 }
 
+.submenu-link.active-submenu,
 .submenu-link:hover {
   color: #ffffff !important;
   background-color: rgba(255, 255, 255, 0.1);
