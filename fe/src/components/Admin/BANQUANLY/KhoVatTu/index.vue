@@ -6,7 +6,7 @@
         <div class="hero-icon"><i class="fas fa-boxes"></i></div>
         <div>
           <h1>Quản lý Vật tư</h1>
-          <p>Theo dõi tồn kho, nhập – xuất và yêu cầu cấp phát vật tư</p>
+          <p>Theo dõi tồn kho, nhập – xuất và duyệt yêu cầu cấp phát vật tư</p>
         </div>
       </div>
       <div class="hero-stats">
@@ -22,137 +22,239 @@
           <span class="hstat-num text-danger">{{ outOfStockCount }}</span>
           <span class="hstat-lbl">Hết hàng</span>
         </div>
-      </div>
-    </div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input v-model="search" placeholder="Tìm kiếm vật tư..." />
+        <div class="hstat">
+          <span class="hstat-num" style="color:#f97316">{{ pendingCount }}</span>
+          <span class="hstat-lbl">Chờ duyệt</span>
         </div>
-        <select v-model="filterCategory" class="filter-select">
-          <option value="">Tất cả danh mục</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
-        <select v-model="filterStatus" class="filter-select">
-          <option value="">Tất cả trạng thái</option>
-          <option value="ok">Đủ hàng</option>
-          <option value="low">Sắp hết</option>
-          <option value="out">Hết hàng</option>
-        </select>
-      </div>
-      <div class="toolbar-right">
-        <button class="btn-export" @click="exportCSV">
-          <i class="fas fa-file-export"></i> Xuất Excel
-        </button>
-        <button class="btn-add" @click="openAddModal">
-          <i class="fas fa-plus"></i> Thêm vật tư
-        </button>
       </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Mã</th>
-            <th>Tên vật tư</th>
-            <th>Danh mục</th>
-            <th>Đơn vị</th>
-            <th>Tồn kho</th>
-            <th>Mức cảnh báo</th>
-            <th>Đơn giá</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="filteredItems.length === 0">
-            <td colspan="10" class="empty-row">
-              <i class="fas fa-box-open"></i>
-              <p>Không tìm thấy vật tư nào</p>
-            </td>
-          </tr>
-          <tr v-for="(item, idx) in filteredItems" :key="item.id" :class="rowClass(item)">
-            <td class="td-idx">{{ idx + 1 }}</td>
-            <td><span class="code-badge">{{ item.code }}</span></td>
-            <td class="td-name">{{ item.name }}</td>
-            <td><span class="cat-tag">{{ item.category }}</span></td>
-            <td>{{ item.unit }}</td>
-            <td>
-              <div class="stock-cell">
-                <span class="stock-num" :class="stockNumClass(item)">{{ item.stock }}</span>
-                <div class="stock-bar-bg">
-                  <div class="stock-bar-fill" :class="stockBarClass(item)" :style="{ width: stockPercent(item) }"></div>
+    <!-- TABS -->
+    <div class="admin-tabs">
+      <button class="atab" :class="{ active: activeTab === 'inventory' }" @click="activeTab = 'inventory'">
+        <i class="fas fa-warehouse"></i> Tồn kho
+      </button>
+      <button class="atab" :class="{ active: activeTab === 'requests' }" @click="loadRequests(); activeTab = 'requests'">
+        <i class="fas fa-clipboard-list"></i> Duyệt yêu cầu
+        <span v-if="pendingCount > 0" class="atab-badge">{{ pendingCount }}</span>
+      </button>
+    </div>
+
+    <!-- ===== TAB TỒN KHO ===== -->
+    <template v-if="activeTab === 'inventory'">
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input v-model="search" placeholder="Tìm kiếm vật tư..." />
+          </div>
+          <select v-model="filterCategory" class="filter-select">
+            <option value="">Tất cả danh mục</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+          <select v-model="filterStatus" class="filter-select">
+            <option value="">Tất cả trạng thái</option>
+            <option value="ok">Đủ hàng</option>
+            <option value="low">Sắp hết</option>
+            <option value="out">Hết hàng</option>
+          </select>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn-export" @click="exportCSV">
+            <i class="fas fa-file-export"></i> Xuất Excel
+          </button>
+          <button class="btn-add" @click="openAddModal">
+            <i class="fas fa-plus"></i> Thêm vật tư
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mã</th>
+              <th>Tên vật tư</th>
+              <th>Danh mục</th>
+              <th>Đơn vị</th>
+              <th>Tồn kho</th>
+              <th>Mức cảnh báo</th>
+              <th>Đơn giá</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="filteredItems.length === 0">
+              <td colspan="10" class="empty-row">
+                <i class="fas fa-box-open"></i>
+                <p>Không tìm thấy vật tư nào</p>
+              </td>
+            </tr>
+            <tr v-for="(item, idx) in filteredItems" :key="item.id" :class="rowClass(item)">
+              <td class="td-idx">{{ idx + 1 }}</td>
+              <td><span class="code-badge">{{ item.code }}</span></td>
+              <td class="td-name">{{ item.name }}</td>
+              <td><span class="cat-tag">{{ item.category }}</span></td>
+              <td>{{ item.unit }}</td>
+              <td>
+                <div class="stock-cell">
+                  <span class="stock-num" :class="stockNumClass(item)">{{ item.stock }}</span>
+                  <div class="stock-bar-bg">
+                    <div class="stock-bar-fill" :class="stockBarClass(item)" :style="{ width: stockPercent(item) }"></div>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td class="td-warn">{{ item.minStock }}</td>
-            <td>{{ formatPrice(item.price) }}</td>
-            <td>
-              <span class="status-badge" :class="statusClass(item)">
-                <i :class="statusIcon(item)"></i>
-                {{ statusLabel(item) }}
-              </span>
-            </td>
-            <td>
-              <div class="action-group">
-                <button class="btn-action btn-in" @click="openAdjustModal(item, 'in')" title="Nhập kho">
-                  <i class="fas fa-arrow-down"></i>
-                </button>
-                <button class="btn-action btn-out" @click="openAdjustModal(item, 'out')" title="Xuất kho">
-                  <i class="fas fa-arrow-up"></i>
-                </button>
-                <button class="btn-action btn-edit" @click="openEditModal(item)" title="Chỉnh sửa">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-action btn-del" @click="deleteItem(item.id)" title="Xoá">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              </td>
+              <td class="td-warn">{{ item.minStock }}</td>
+              <td>{{ formatPrice(item.price) }}</td>
+              <td>
+                <span class="status-badge" :class="statusClass(item)">
+                  <i :class="statusIcon(item)"></i>
+                  {{ statusLabel(item) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-action btn-in" @click="openAdjustModal(item, 'in')" title="Nhập kho">
+                    <i class="fas fa-arrow-down"></i>
+                  </button>
+                  <button class="btn-action btn-out" @click="openAdjustModal(item, 'out')" title="Xuất kho">
+                    <i class="fas fa-arrow-up"></i>
+                  </button>
+                  <button class="btn-action btn-edit" @click="openEditModal(item)" title="Chỉnh sửa">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-action btn-del" @click="deleteItem(item.id)" title="Xoá">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <!-- RECENT TRANSACTIONS -->
-    <div class="section-title">
-      <i class="fas fa-history"></i> Lịch sử giao dịch gần đây
-    </div>
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th>Thời gian</th>
-            <th>Loại</th>
-            <th>Vật tư</th>
-            <th>Số lượng</th>
-            <th>Người thực hiện</th>
-            <th>Ghi chú</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="tx in transactions" :key="tx.id">
-            <td class="td-time">{{ tx.time }}</td>
-            <td>
-              <span class="tx-type" :class="tx.type === 'in' ? 'tx-in' : 'tx-out'">
-                <i :class="tx.type === 'in' ? 'fas fa-arrow-circle-down' : 'fas fa-arrow-circle-up'"></i>
-                {{ tx.type === 'in' ? 'Nhập kho' : 'Xuất kho' }}
-              </span>
-            </td>
-            <td>{{ tx.itemName }}</td>
-            <td><strong>{{ tx.qty }}</strong></td>
-            <td>{{ tx.by }}</td>
-            <td class="td-note">{{ tx.note }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <!-- RECENT TRANSACTIONS -->
+      <div class="section-title">
+        <i class="fas fa-history"></i> Lịch sử giao dịch gần đây
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Thời gian</th>
+              <th>Loại</th>
+              <th>Vật tư</th>
+              <th>Số lượng</th>
+              <th>Người thực hiện</th>
+              <th>Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="tx in transactions" :key="tx.id">
+              <td class="td-time">{{ tx.time }}</td>
+              <td>
+                <span class="tx-type" :class="tx.type === 'in' ? 'tx-in' : 'tx-out'">
+                  <i :class="tx.type === 'in' ? 'fas fa-arrow-circle-down' : 'fas fa-arrow-circle-up'"></i>
+                  {{ tx.type === 'in' ? 'Nhập kho' : 'Xuất kho' }}
+                </span>
+              </td>
+              <td>{{ tx.itemName }}</td>
+              <td><strong>{{ tx.qty }}</strong></td>
+              <td>{{ tx.by }}</td>
+              <td class="td-note">{{ tx.note }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
+
+    <!-- ===== TAB DUYỆT YÊU CẦU ===== -->
+    <template v-if="activeTab === 'requests'">
+      <div class="req-header">
+        <div class="req-filter">
+          <button
+            v-for="f in reqFilters" :key="f.value"
+            class="req-filter-btn"
+            :class="{ active: reqFilterVal === f.value }"
+            @click="reqFilterVal = f.value"
+          >
+            {{ f.label }}
+            <span v-if="f.value === 'pending' && pendingCount > 0" class="atab-badge">{{ pendingCount }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tên vật tư</th>
+              <th>Danh mục</th>
+              <th>SL yêu cầu</th>
+              <th>Đơn vị</th>
+              <th>Ưu tiên</th>
+              <th>Ghi chú</th>
+              <th>Thời gian</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="filteredRequests.length === 0">
+              <td colspan="10" class="empty-row">
+                <i class="fas fa-inbox"></i>
+                <p>Không có yêu cầu nào</p>
+              </td>
+            </tr>
+            <tr v-for="(req, idx) in filteredRequests" :key="req.id">
+              <td class="td-idx">{{ idx + 1 }}</td>
+              <td class="td-name">{{ req.name }}</td>
+              <td><span class="cat-tag">{{ req.category || '—' }}</span></td>
+              <td><strong>{{ req.qty }}</strong></td>
+              <td>{{ req.unit }}</td>
+              <td>
+                <span class="prio-badge" :class="'prio-' + req.priority">
+                  <i class="fas fa-fire-flame-curved"></i>
+                  {{ priorityLabel(req.priority) }}
+                </span>
+              </td>
+              <td class="td-note">{{ req.note || '—' }}</td>
+              <td class="td-time">{{ req.time }}</td>
+              <td>
+                <span class="req-status-pill" :class="reqStatusClass(req.status)">
+                  <i :class="reqStatusIcon(req.status)"></i>
+                  {{ reqStatusLabel(req.status) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group" v-if="req.status === 'pending'">
+                  <button class="btn-approve" @click="approveRequest(req)">
+                    <i class="fas fa-check"></i> Duyệt
+                  </button>
+                  <button class="btn-reject" @click="rejectRequest(req)">
+                    <i class="fas fa-times"></i> Từ chối
+                  </button>
+                </div>
+                <div class="action-group" v-else-if="req.status === 'approved'">
+                  <button class="btn-done" @click="markDone(req)">
+                    <i class="fas fa-box-open"></i> Đã cấp phát
+                  </button>
+                </div>
+                <span v-else class="done-label">
+                  <i :class="req.status === 'done' ? 'fas fa-check-double' : 'fas fa-ban'"></i>
+                  {{ req.status === 'done' ? 'Hoàn tất' : 'Đã từ chối' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
 
     <!-- ===== MODAL THÊM / SỬA ===== -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -239,8 +341,27 @@
 <script>
 export default {
   name: "AdminQuanLyVatTu",
+
   data() {
+    const STORAGE_KEY = 'vattu_requests';
+    let requests = [];
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) requests = JSON.parse(saved);
+    } catch (e) {}
+    // Nếu chưa có dữ liệu, dùng dữ liệu mẫu
+    if (!requests.length) {
+      requests = [
+        { id: 1, name: 'Ống nước PVC Ø27', category: 'Nước',  qty: 30, unit: 'mét', priority: 'high',   status: 'pending',  time: '08/03/2026 13:40', note: 'thiếu', requestedBy: 'Kỹ thuật viên' },
+        { id: 2, name: 'Khóa cửa tay gạt', category: 'Cơ khí', qty: 3, unit: 'cái', priority: 'high',   status: 'pending',  time: '03/03/2026 08:00', note: 'Hết hoàn toàn, cần gấp', requestedBy: 'Kỹ thuật viên' },
+        { id: 3, name: 'Keo silicon chống thấm', category: 'Xây dựng', qty: 5, unit: 'tuýp', priority: 'medium', status: 'approved', time: '28/02/2026 14:00', note: '', requestedBy: 'Kỹ thuật viên' },
+        { id: 4, name: 'Cầu dao tự động 16A', category: 'Điện', qty: 4, unit: 'cái', priority: 'medium', status: 'done',     time: '25/02/2026 09:00', note: '', requestedBy: 'Kỹ thuật viên' },
+      ];
+    }
+
     return {
+      STORAGE_KEY,
+      activeTab: 'inventory',
       search: "",
       filterCategory: "",
       filterStatus: "",
@@ -273,8 +394,20 @@ export default {
         { id: 5, time: "28/02/2026 09:20", type: "out", itemName: "Găng tay bảo hộ", qty: 5, by: "Lê Văn C", note: "Cấp phát cho đội kỹ thuật" },
       ],
       nextId: 11,
+
+      // Yêu cầu vật tư từ kỹ thuật viên
+      vattuRequests: requests,
+      reqFilterVal: 'all',
+      reqFilters: [
+        { label: 'Tất cả', value: 'all' },
+        { label: 'Chờ duyệt', value: 'pending' },
+        { label: 'Đã duyệt', value: 'approved' },
+        { label: 'Đã cấp phát', value: 'done' },
+        { label: 'Từ chối', value: 'rejected' },
+      ],
     };
   },
+
   computed: {
     filteredItems() {
       return this.items.filter((item) => {
@@ -291,8 +424,15 @@ export default {
     totalItems() { return this.items.length; },
     lowStockCount() { return this.items.filter(i => i.stock > 0 && i.stock < i.minStock).length; },
     outOfStockCount() { return this.items.filter(i => i.stock === 0).length; },
+    pendingCount() { return this.vattuRequests.filter(r => r.status === 'pending').length; },
+    filteredRequests() {
+      if (this.reqFilterVal === 'all') return this.vattuRequests;
+      return this.vattuRequests.filter(r => r.status === this.reqFilterVal);
+    },
   },
+
   methods: {
+    // ===== KHO VẬT TƯ =====
     statusLabel(item) {
       if (item.stock === 0) return "Hết hàng";
       if (item.stock < item.minStock) return "Sắp hết";
@@ -340,9 +480,7 @@ export default {
       this.form = { ...item };
       this.showModal = true;
     },
-    closeModal() {
-      this.showModal = false;
-    },
+    closeModal() { this.showModal = false; },
     saveItem() {
       if (!this.form.name || !this.form.code) return alert("Vui lòng nhập đầy đủ mã và tên vật tư!");
       if (this.modalMode === "add") {
@@ -380,7 +518,7 @@ export default {
         type: this.adjustType,
         itemName: this.adjustItem.name,
         qty: this.adjustQty,
-        by: "Quản Lý Tuấn",
+        by: "Quản trị viên",
         note: this.adjustNote || "—",
       });
       this.showAdjustModal = false;
@@ -393,6 +531,52 @@ export default {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = "vat-tu.csv"; a.click();
+    },
+
+    // ===== DUYỆT YÊU CẦU VẬT TƯ =====
+    loadRequests() {
+      try {
+        const saved = localStorage.getItem(this.STORAGE_KEY);
+        if (saved) this.vattuRequests = JSON.parse(saved);
+      } catch (e) {}
+    },
+    saveRequestsToStorage() {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.vattuRequests));
+    },
+    approveRequest(req) {
+      req.status = 'approved';
+      this.saveRequestsToStorage();
+    },
+    rejectRequest(req) {
+      if (confirm(`Từ chối yêu cầu "${req.name}"?`)) {
+        req.status = 'rejected';
+        this.saveRequestsToStorage();
+      }
+    },
+    markDone(req) {
+      req.status = 'done';
+      this.saveRequestsToStorage();
+      this.transactions.unshift({
+        id: Date.now(),
+        time: new Date().toLocaleString("vi-VN"),
+        type: 'out',
+        itemName: req.name,
+        qty: req.qty,
+        by: req.requestedBy || 'Kỹ thuật viên',
+        note: `Cấp phát theo yêu cầu${req.note ? ' – ' + req.note : ''}`,
+      });
+    },
+    reqStatusClass(s) {
+      return { 'rs-pending': s === 'pending', 'rs-approved': s === 'approved', 'rs-done': s === 'done', 'rs-rejected': s === 'rejected' };
+    },
+    reqStatusIcon(s) {
+      return s === 'pending' ? 'fas fa-clock' : s === 'approved' ? 'fas fa-thumbs-up' : s === 'done' ? 'fas fa-check-double' : 'fas fa-ban';
+    },
+    reqStatusLabel(s) {
+      return s === 'pending' ? 'Chờ duyệt' : s === 'approved' ? 'Đã duyệt' : s === 'done' ? 'Đã cấp phát' : 'Từ chối';
+    },
+    priorityLabel(p) {
+      return p === 'high' ? 'Khẩn cấp' : p === 'medium' ? 'Trung bình' : 'Thấp';
     },
   },
 };
@@ -435,6 +619,27 @@ export default {
 .text-warning { color: #ffd166 !important; }
 .text-danger { color: #ff6b6b !important; }
 .text-success { color: #51cf66; }
+
+/* ===== TABS ===== */
+.admin-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0; padding-bottom: 0;
+}
+.atab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border: none; background: none;
+  font-size: 14px; font-weight: 500; color: #64748b;
+  border-radius: 10px 10px 0 0;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  cursor: pointer; transition: all .2s;
+}
+.atab:hover { background: #f8fafc; color: #1e293b; }
+.atab.active { color: #2d5986; font-weight: 700; border-bottom-color: #2d5986; background: #eef4fb; }
+.atab-badge {
+  background: #ef4444; color: #fff;
+  border-radius: 99px; padding: 1px 7px;
+  font-size: 11px; font-weight: 700; min-width: 18px; text-align: center;
+}
 
 /* ===== TOOLBAR ===== */
 .toolbar {
@@ -479,7 +684,6 @@ export default {
   -webkit-overflow-scrolling: touch;
 }
 table { width: 100%; border-collapse: collapse; min-width: 860px; }
-theadr tr { background: #f1f5fb; }
 thead tr { background: #f1f5fb; }
 thead th {
   padding: 11px 10px; text-align: left;
@@ -527,7 +731,7 @@ tbody td { padding: 10px 10px; font-size: 13px; color: #334155; vertical-align: 
 .badge-warning { background: #fef3c7; color: #d97706; }
 .badge-danger { background: #fee2e2; color: #dc2626; }
 
-.action-group { display: flex; gap: 4px; flex-wrap: nowrap; min-width: 132px; }
+.action-group { display: flex; gap: 4px; flex-wrap: nowrap; }
 .btn-action {
   width: 28px; height: 28px; border: none; border-radius: 7px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -560,6 +764,70 @@ tbody td { padding: 10px 10px; font-size: 13px; color: #334155; vertical-align: 
 }
 .tx-in { background: #dcfce7; color: #16a34a; }
 .tx-out { background: #fee2e2; color: #dc2626; }
+
+/* ===== YÊU CẦU VẬT TƯ ===== */
+.req-header { margin-bottom: 16px; }
+.req-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+.req-filter-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 20px;
+  border: 1.5px solid #dde3f0; background: white;
+  font-size: 13px; font-weight: 500; color: #64748b;
+  cursor: pointer; transition: all .2s;
+}
+.req-filter-btn:hover { border-color: #2d5986; color: #2d5986; }
+.req-filter-btn.active { background: #2d5986; color: white; border-color: #2d5986; }
+
+.prio-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 20px; padding: 3px 9px;
+  font-size: 12px; font-weight: 600;
+}
+.prio-high   { background: #fee2e2; color: #b91c1c; }
+.prio-medium { background: #ffedd5; color: #c2410c; }
+.prio-low    { background: #f0fdf4; color: #15803d; }
+
+.req-status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.rs-pending  { background: #fef9c3; color: #854d0e; }
+.rs-approved { background: #dbeafe; color: #1d4ed8; }
+.rs-done     { background: #dcfce7; color: #15803d; }
+.rs-rejected { background: #fee2e2; color: #b91c1c; }
+
+.btn-approve {
+  display: flex; align-items: center; gap: 5px;
+  background: #dcfce7; color: #15803d;
+  border: none; border-radius: 8px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .2s;
+}
+.btn-approve:hover { background: #16a34a; color: white; }
+
+.btn-reject {
+  display: flex; align-items: center; gap: 5px;
+  background: #fee2e2; color: #b91c1c;
+  border: none; border-radius: 8px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .2s;
+}
+.btn-reject:hover { background: #dc2626; color: white; }
+
+.btn-done {
+  display: flex; align-items: center; gap: 5px;
+  background: #dbeafe; color: #1d4ed8;
+  border: none; border-radius: 8px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: .2s;
+}
+.btn-done:hover { background: #2563eb; color: white; }
+
+.done-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: #94a3b8;
+}
 
 /* ===== MODAL ===== */
 .modal-overlay {

@@ -357,7 +357,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 
 // ===== DATA =====
 const inventory = ref([
@@ -381,11 +381,27 @@ const usageHistory = ref([
   { id: 5, time: '25/02/2026 10:20', itemName: 'Sơn tường nội thất',   category: 'Xây dựng',qty: 3, unit: 'lít', jobRef: 'YC #25 – Phòng 204', note: 'Sơn lại tường ẩm' },
 ]);
 
-const myRequests = ref([
-  { id: 1, name: 'Khóa cửa tay gạt', category: 'Cơ khí',  qty: 3, unit: 'cái', priority: 'high',   status: 'pending',  time: '02/03/2026 08:00', note: 'Hết hoàn toàn, cần gấp' },
-  { id: 2, name: 'Keo silicon chống thấm', category: 'Xây dựng', qty: 5, unit: 'tuýp', priority: 'medium', status: 'approved', time: '28/02/2026 14:00', note: '' },
-  { id: 3, name: 'Cầu dao tự động 16A', category: 'Điện', qty: 4, unit: 'cái', priority: 'medium', status: 'done',     time: '25/02/2026 09:00', note: '' },
-]);
+// Load myRequests từ localStorage để admin và kỹ thuật viên chia sẻ dữ liệu
+const STORAGE_KEY = 'vattu_requests';
+function loadRequests() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return [
+    { id: 1, name: 'Ống nước PVC Ø27', category: 'Nước',  qty: 30, unit: 'mét', priority: 'high',   status: 'pending',  time: '08/03/2026 13:40', note: 'thiếu', requestedBy: 'Kỹ thuật viên' },
+    { id: 2, name: 'Khóa cửa tay gạt', category: 'Cơ khí', qty: 3, unit: 'cái', priority: 'high',   status: 'pending',  time: '03/03/2026 08:00', note: 'Hết hoàn toàn, cần gấp', requestedBy: 'Kỹ thuật viên' },
+    { id: 3, name: 'Keo silicon chống thấm', category: 'Xây dựng', qty: 5, unit: 'tuýp', priority: 'medium', status: 'approved', time: '28/02/2026 14:00', note: '', requestedBy: 'Kỹ thuật viên' },
+    { id: 4, name: 'Cầu dao tự động 16A', category: 'Điện', qty: 4, unit: 'cái', priority: 'medium', status: 'done',     time: '25/02/2026 09:00', note: '', requestedBy: 'Kỹ thuật viên' },
+  ];
+}
+
+const myRequests = ref(loadRequests());
+
+// Lưu vào localStorage mỗi khi myRequests thay đổi
+watch(myRequests, (val) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(val));
+}, { deep: true });
 
 // ===== TABS =====
 const activeTab = ref('inventory');
@@ -452,7 +468,8 @@ function submitRequest() {
   const now = new Date();
   const pad = n => n.toString().padStart(2, '0');
   const timeStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  myRequests.value.unshift({ id: Date.now(), ...reqForm.value, status: 'pending', time: timeStr });
+  const newReq = { id: Date.now(), ...reqForm.value, status: 'pending', time: timeStr, requestedBy: 'Kỹ thuật viên' };
+  myRequests.value = [newReq, ...myRequests.value];
   resetReqForm();
   showToast('Đã gửi yêu cầu cấp vật tư thành công!', 'success', 'fas fa-check-circle');
 }
@@ -500,6 +517,7 @@ function showToast(msg, type = 'success', icon = 'fas fa-check-circle') {
   toastTimer = setTimeout(() => { toast.value.show = false; }, 3000);
 }
 </script>
+
 
 <style scoped>
 /* ===== PAGE ===== */

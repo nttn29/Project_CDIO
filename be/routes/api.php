@@ -100,4 +100,6 @@ Route::get('nhat_ky', [\App\Http\Controllers\NhatKyCongViecController::class, 'i
 
 // ============ ADMIN ROUTES ============
 // Note: Add auth middleware when Sanctum is properly installed
-// Users routes already added in the open group above
+Route::get('users', [\App\Http\Controllers\NguoiDungController::class, 'index']);
+Route::post('users', [\App\Http\Controllers\NguoiDungController::class, 'store']);
+Route::delete('users/{id}', [\App\Http\Controllers\NguoiDungController::class, 'destroy']);

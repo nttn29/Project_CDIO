@@ -22,6 +22,12 @@ class NguoiDungController extends Controller
 
     public function store(Request $request)
     {
+        // Kiểm tra email đã tồn tại chưa
+        $exists = DB::table('nguoi_dung')->where('email', $request->email)->exists();
+        if ($exists) {
+            return response()->json(['message' => 'Email này đã được sử dụng bởi một tài khoản khác. Vui lòng dùng email khác.'], 422);
+        }
+
         $id = DB::table('nguoi_dung')->insertGetId($request->only(['email','ten','mat_khau','dien_thoai','vai_tro','trang_thai']));
         return response()->json(['id' => $id], 201);
     }

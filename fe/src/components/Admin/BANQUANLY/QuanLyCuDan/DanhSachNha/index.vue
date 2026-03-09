@@ -151,10 +151,18 @@ export default {
     },
 
     async save() {
+      // Kiểm tra thông tin bắt buộc
+      if (!this.form.fullName || !this.form.email) {
+        alert("Vui lòng nhập đầy đủ họ tên và email.");
+        return;
+      }
+      if (!this.isEdit && !this.form.password) {
+        alert("Vui lòng nhập mật khẩu.");
+        return;
+      }
+
       try {
         if (this.isEdit) {
-            // Note: API users/{id} update endpoint is /users/{id} but api.php does not route PUT /users/{id} to NguoiDungController@update explicitly for admin
-            // Wait, api.php doesn't have PUT users/{id} inside ADMIN ROUTES. But it has it under RESIDENT ROUTES: `Route::put('users/{id}', ...)`
             await api.put(`/users/${this.form.id_nguoi_dung}`, {
                 ten: this.form.fullName,
                 email: this.form.email,
@@ -173,7 +181,9 @@ export default {
         await this.fetchUsers();
         this.close();
       } catch (err) {
-        alert("Có lỗi xảy ra khi lưu: " + (err?.response?.data?.message || err.message));
+        // Lấy message từ response nếu có, ngược lại hiển thị lỗi chung
+        const msg = err?.response?.data?.message || err.message || "Có lỗi không xác định.";
+        alert("❌ Lỗi: " + msg);
       }
     },
 
